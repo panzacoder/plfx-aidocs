@@ -2,6 +2,7 @@
   "name": "@v1/email",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
     "lint": "biome check .",
@@ -13,9 +14,14 @@
   },
   "dependencies": {
     "@react-email/components": "^0.0.24",
-    "@react-email/tailwind": "^0.1.0"
+    "@react-email/render": "^1.0.4",
+    "@react-email/tailwind": "^0.1.0",
+    "react": "^18.3.1"
   },
   "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^18",
+    "@v1/typescript": "workspace:*",
     "react-email": "^3.0.6"
   }
 }

@@ -9,20 +9,21 @@ import {
   Preview,
   Text,
 } from "@react-email/components";
-/* eslint-disable react-refresh/only-export-components */
 import { render } from "@react-email/render";
-import { env } from "../../env";
-import { sendEmail } from "../index";
 
 type SubscriptionEmailOptions = {
   email: string;
   subscriptionId: string;
+  siteUrl: string;
 };
 
 /**
  * Templates.
  */
-export function SubscriptionSuccessEmail({ email }: SubscriptionEmailOptions) {
+export function SubscriptionSuccessEmail({
+  email,
+  siteUrl,
+}: SubscriptionEmailOptions) {
   return (
     <Html>
       <Head />
@@ -36,7 +37,7 @@ export function SubscriptionSuccessEmail({ email }: SubscriptionEmailOptions) {
       >
         <Container style={{ margin: "0 auto", padding: "20px 0 48px" }}>
           <Img
-            src={`${env.SITE_URL}/images/convex-logo-email.jpg`}
+            src={`${siteUrl}/images/convex-logo-email.jpg`}
             width="40"
             height="37"
             alt=""
@@ -50,7 +51,7 @@ export function SubscriptionSuccessEmail({ email }: SubscriptionEmailOptions) {
             We hope you enjoy the new features!
           </Text>
           <Text style={{ fontSize: "16px", lineHeight: "26px" }}>
-            The <Link href={`${env.SITE_URL}`}>domain-name.com</Link> team.
+            The <Link href={`${siteUrl}`}>domain-name.com</Link> team.
           </Text>
           <Hr style={{ borderColor: "#cccccc", margin: "20px 0" }} />
           <Text style={{ color: "#8898aa", fontSize: "12px" }}>
@@ -62,7 +63,10 @@ export function SubscriptionSuccessEmail({ email }: SubscriptionEmailOptions) {
   );
 }
 
-export function SubscriptionErrorEmail({ email }: SubscriptionEmailOptions) {
+export function SubscriptionErrorEmail({
+  email,
+  siteUrl,
+}: SubscriptionEmailOptions) {
   return (
     <Html>
       <Head />
@@ -90,7 +94,7 @@ export function SubscriptionErrorEmail({ email }: SubscriptionEmailOptions) {
             But don't worry, we'll not charge you anything.
           </Text>
           <Text style={{ fontSize: "16px", lineHeight: "26px" }}>
-            The <Link href={`${env.SITE_URL}`}>domain-name.com</Link> team.
+            The <Link href={`${siteUrl}`}>domain-name.com</Link> team.
           </Text>
           <Hr style={{ borderColor: "#cccccc", margin: "20px 0" }} />
           <Text style={{ color: "#8898aa", fontSize: "12px" }}>
@@ -102,42 +106,10 @@ export function SubscriptionErrorEmail({ email }: SubscriptionEmailOptions) {
   );
 }
 
-/**
- * Renders.
- */
 export function renderSubscriptionSuccessEmail(args: SubscriptionEmailOptions) {
   return render(<SubscriptionSuccessEmail {...args} />);
 }
 
 export function renderSubscriptionErrorEmail(args: SubscriptionEmailOptions) {
   return render(<SubscriptionErrorEmail {...args} />);
-}
-
-/**
- * Senders.
- */
-export async function sendSubscriptionSuccessEmail({
-  email,
-  subscriptionId,
-}: SubscriptionEmailOptions) {
-  const html = await renderSubscriptionSuccessEmail({ email, subscriptionId });
-
-  await sendEmail({
-    to: email,
-    subject: "Successfully Subscribed to PRO",
-    html,
-  });
-}
-
-export async function sendSubscriptionErrorEmail({
-  email,
-  subscriptionId,
-}: SubscriptionEmailOptions) {
-  const html = await renderSubscriptionErrorEmail({ email, subscriptionId });
-
-  await sendEmail({
-    to: email,
-    subject: "Subscription Issue - Customer Support",
-    html,
-  });
 }

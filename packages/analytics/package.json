@@ -12,8 +12,13 @@
   },
   "dependencies": {
     "@openpanel/nextjs": "^1.0.0",
+    "@v1/backend": "workspace:*",
     "@v1/logger": "workspace:*",
     "@vercel/functions": "^1.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "@v1/typescript": "workspace:*"
   },
   "exports": {
     "./server": "./src/server.ts",

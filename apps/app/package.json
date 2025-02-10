@@ -12,8 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@auth/core": "^0.34.2",
-    "@convex-dev/auth": "^0.0.71",
+    "@convex-dev/auth": "^0.0.80",
     "@polar-sh/sdk": "^0.25.0",
     "@tanstack/react-form": "^0.33.0",
     "@tanstack/zod-form-adapter": "^0.33.0",
@@ -21,8 +20,10 @@
     "@v1/backend": "workspace:*",
     "@v1/ui": "workspace:*",
     "@xixixao/uploadstuff": "^0.0.5",
+    "convex": "^1.19.0",
     "dub": "^0.36.5",
     "geist": "^1.3.1",
+    "lucide-react": "^0.438.0",
     "next": "14.2.7",
     "next-international": "^1.2.4",
     "next-safe-action": "^7.9.0",
@@ -38,6 +39,7 @@
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@v1/typescript": "workspace:*",
     "typescript": "^5.5.4"
   }
 }

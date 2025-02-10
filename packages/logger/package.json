@@ -11,5 +11,8 @@
   },
   "dependencies": {
     "pino": "^9.3.2"
+  },
+  "devDependencies": {
+    "@v1/typescript": "workspace:*"
   }
 }

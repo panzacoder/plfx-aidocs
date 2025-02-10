@@ -6,20 +6,19 @@ import { Navigation } from "./_components/navigation";
 
 export default async function Layout({
   children,
-}: { children: React.ReactNode }) {
-  const user = await fetchQuery(
-    api.users.getUser,
-    {},
-    { token: convexAuthNextjsToken() },
-  );
+}: {
+  children: React.ReactNode;
+}) {
+  const token = await convexAuthNextjsToken();
+
+  if (!token) {
+    return redirect("/login");
+  }
+  const user = await fetchQuery(api.users.getUser, {}, { token });
   if (!user?.username || !user?.subscription) {
     return redirect("/onboarding");
   }
-  const preloadedUser = await preloadQuery(
-    api.users.getUser,
-    {},
-    { token: convexAuthNextjsToken() },
-  );
+  const preloadedUser = await preloadQuery(api.users.getUser, {}, { token });
   return (
     <div className="flex min-h-[100vh] w-full flex-col bg-secondary dark:bg-black">
       <Navigation preloadedUser={preloadedUser} />

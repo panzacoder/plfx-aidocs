@@ -7,16 +7,20 @@ import { redirect } from "next/navigation";
 
 export default async function Layout({
   children,
-}: { children: React.ReactNode }) {
-  const user = await fetchQuery(
-    api.users.getUser,
-    {},
-    { token: convexAuthNextjsToken() },
-  );
+}: {
+  children: React.ReactNode;
+}) {
+  const token = await convexAuthNextjsToken();
+
+  if (!token) {
+    return redirect("/login");
+  }
+
+  const user = await fetchQuery(api.users.getUser, {}, { token });
   const checkoutUrl = await fetchAction(
     api.subscriptions.getOnboardingCheckoutUrl,
     {},
-    { token: convexAuthNextjsToken() },
+    { token },
   );
   if (!checkoutUrl) {
     return null;
@@ -25,7 +29,7 @@ export default async function Layout({
     await fetchMutation(
       api.subscriptions.setSubscriptionPending,
       {},
-      { token: convexAuthNextjsToken() },
+      { token },
     );
     return redirect(checkoutUrl);
   }

@@ -1,12 +1,11 @@
 {
   "name": "v1",
   "private": true,
-  "workspaces": ["packages/*", "apps/*", "tooling/*"],
   "scripts": {
     "build": "turbo build",
     "clean": "git clean -xdf node_modules",
     "clean:workspaces": "turbo clean",
-    "dev": "turbo dev --parallel",
+    "dev": "turbo dev --parallel --ui=tui",
     "dev:web": "turbo dev --filter=@v1/web",
     "dev:jobs": "turbo jobs --filter=@v1/jobs",
     "dev:app": "turbo dev --filter=@v1/app",
@@ -15,20 +14,27 @@
     "test": "turbo test --parallel",
     "format": "biome format --write .",
     "lint": "turbo lint && bun lint:repo",
-    "lint:repo": "bunx sherif@latest",
-    "lint:repo:fix": "bunx sherif@latest --fix",
+    "lint:repo": "pnpm dlx sherif@latest",
+    "lint:repo:fix": "pnpm dlx sherif@latest --fix",
     "typecheck": "turbo typecheck"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "react": "^18.3.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.8.3",
     "@t3-oss/env-nextjs": "^0.11.1",
+    "@types/react": "^18",
     "chalk": "^4.1.2",
     "dotenv": "^16.4.5",
     "ora": "^5.4.1",
+    "tailwindcss": "^3.4.10",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.1",
-    "turbo": "2.1.1",
-    "typescript": "^5.5.4"
+    "turbo": "2.4.0",
+    "typescript": "^5.5.4",
+    "zod": "^3.23.8"
   },
-  "packageManager": "bun@1.1.26"
+  "packageManager": "pnpm@9.15.4"
 }

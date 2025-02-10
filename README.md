@@ -1,6 +1,5 @@
 ![hero](image.png)
 
-
 <p align="center">
 	<h1 align="center"><b>Create v1</b></h1>
 <p align="center">
@@ -63,14 +62,13 @@ reuse and best practices that will grow with your business.
 
 ## Prerequisites
 
-### Bun
+### PNPM
 
-Bun is the only prerequisite you need to install before getting started.
+PNPM is the only prerequisite you need to install before getting started.
 
-To install Bun, please follow the official installation instructions:
+To install PNPM, please follow the official installation instructions:
 
-[Bun Installation Guide](https://bun.sh/docs/installation)
-
+[PNPM Installation Guide](https://pnpm.io/installation)
 
 ## Getting Started
 
@@ -108,55 +106,67 @@ bun dev
 If you prefer to set up the project manually, follow these steps:
 
 1. Clone the repository:
+
    ```bash
    bunx degit get-convex/v1 v1
    cd v1
    ```
 
 2. Install dependencies:
+
    ```bash
    bun install
    ```
 
 3. Initialize git repository:
+
    ```bash
    git init && git commit -am 'initial commit'
    ```
 
 4. Set up Convex backend:
+
    ```bash
    cd packages/backend
    npm run setup
    ```
+
    This will create a new Convex project. It will fail after project creation due to missing environment variables, which is expected at this stage.
 
 5. Set up authentication:
+
    ```bash
    npx @convex-dev/auth
    ```
+
    Follow the prompts to configure authentication for your project.
 
 6. Set up environment variables:
    If you prefer to set up services manually or want more control over the process, refer to the [Detailed Service Setup Instructions](#detailed-service-setup-instructions) section below.
 
 7. Copy Convex environment variables:
+
    - Copy the contents of `packages/backend/.env`
    - Paste these variables into the environment variables panel in your Convex
      dashboard
 
 8. Initialize Polar products and seed database:
+
    ```bash
    cd packages/backend
    bunx convex run init
    ```
 
 9. Start the development server:
+
    ```bash
    bun dev
    ```
+
    This starts everything in development mode (web, app, api, email).
 
    Alternatively, you can start specific parts of the application:
+
    - `bun dev:web`: starts the web app
    - `bun dev:app`: starts the app
    - `bun dev:convex`: starts the Convex API
@@ -198,6 +208,7 @@ If you choose to manually set up services and environment variables, follow thes
 
 1. Set up a project on https://sentry.io
 2. Add the following to `apps/app/.env`:
+
    ```
    # The DSN from Sentry dashboard under 'Settings' > 'Projects' > [Your Project] > 'Client Keys (DSN)'
    NEXT_PUBLIC_SENTRY_DSN=https://foobarfoobar42@foobar42.ingest.sentry.io/42424242
@@ -216,6 +227,7 @@ If you choose to manually set up services and environment variables, follow thes
 
 1. Create an account at https://resend.com
 2. Add the following to `packages/backend/.env`:
+
    ```
    # The API key from Resend dashboard under 'API Keys'. Starts with 're_'
    RESEND_API_KEY=re_foobarfoobarfoobarfoobarfoobar42
@@ -230,6 +242,7 @@ If you choose to manually set up services and environment variables, follow thes
 1. Set up an account at https://polar.sh
    _Note: If you're just testing, be sure to switch to Sandbox via the top left dropdown in the dashboard before proceeding._
 2. Add the following to `packages/backend/.env`:
+
    ```
    # Generate this in Polar dashboard under 'Account' > 'Developer settings'
    # Required permissions: 'products:read', 'products:write', 'subscriptions:read'
@@ -265,6 +278,7 @@ If you choose to manually set up services and environment variables, follow thes
 
 1. Set up Google OAuth 2.0 credentials following the guide at https://support.google.com/cloud/answer/6158849?hl=en
 2. Add the following to `packages/backend/.env`:
+
    ```
    # The client ID from your Google OAuth 2.0 credentials
    AUTH_GOOGLE_ID=424242424242-foobarfoobarfoobarfoobar42.apps.googleusercontent.com
@@ -272,6 +286,7 @@ If you choose to manually set up services and environment variables, follow thes
    # The client secret from your Google OAuth 2.0 credentials
    AUTH_GOOGLE_SECRET=GOCSPX-foobarfoobarfoobarfoobar42
    ```
+
 3. Set up the authorized redirect URI in your Google Cloud Console:
    - Use your Convex deployment's HTTP Actions URL with the path '/api/auth/callback/google'
    - Example: 'https://your-convex-deployment.convex.site/api/auth/callback/google'
@@ -281,6 +296,7 @@ If you choose to manually set up services and environment variables, follow thes
 After setting up all the required services and environment variables, proceed to step 7 in the Getting Started section to copy the Convex environment variables to your Convex dashboard.
 
 For more detailed information on each component, refer to their respective documentation linked in the "What's included" section above.
+
 </details>
 
 ## Deployment
@@ -294,7 +310,6 @@ would be a separate Vercel project.
 
 Steps to deploy a Vercel project with Convex can be found
 [here](https://docs.convex.dev/production/hosting/vercel#deploying-to-vercel).
-
 
 ### Production Environment Variables
 
