@@ -1,0 +1,65 @@
+{
+  "name": "Convex Guidelines",
+  "description": "Guidelines for working with Convex in this project",
+  "rules": [
+    {
+      "name": "Schema Structure",
+      "description": "Guidelines for schema definition",
+      "pattern": "packages/backend/convex/schema.ts",
+      "notes": [
+        "Define all tables in schema.ts",
+        "Use proper index naming: 'by_field1_and_field2'",
+        "Include updatedAt fields for modifiable tables",
+        "Document tables and fields with JSDoc comments",
+        "Use strict TypeScript types, especially for IDs"
+      ]
+    },
+    {
+      "name": "Validators",
+      "description": "Guidelines for validator definitions",
+      "pattern": "packages/backend/convex/validators/**/*",
+      "notes": [
+        "Use convex-helpers/server/zod for schema validation",
+        "Use zid() from convex-helpers for ID validation",
+        "Share validation schemas with frontend code using Zod",
+        "Use z.object() for complex object validation",
+        "Document validation rules in comments",
+        "For simple Convex-only validations, use native v.* validators",
+        "Use zCustomQuery/zCustomMutation for Zod-validated functions"
+      ]
+    },
+    {
+      "name": "OpenAI Integration",
+      "description": "OpenAI-specific implementation details",
+      "pattern": "packages/backend/convex/openai/**/*",
+      "notes": [
+        "OpenAI is the only supported AI provider",
+        "Store API keys securely in environment variables",
+        "Include proper error handling for API calls",
+        "Document rate limits and token usage"
+      ]
+    },
+    {
+      "name": "Function Organization",
+      "description": "Guidelines for organizing Convex functions",
+      "pattern": "packages/backend/convex/**/*.ts",
+      "notes": [
+        "Group related functions in domain-specific directories",
+        "Use proper function registration (query, mutation, action)",
+        "Use zCustomQuery/zCustomMutation for Zod validation",
+        "Document function purpose and side effects",
+        "Use internalQuery/internalMutation/internalAction for private functions"
+      ]
+    }
+  ],
+  "recommendations": [
+    "Follow Convex best practices for schema design",
+    "Use TypeScript strict mode",
+    "Implement proper error handling",
+    "Document all public functions and interfaces",
+    "Use proper naming conventions for indexes and fields",
+    "Never use filter() in queries, use withIndex() instead",
+    "Use pagination for large result sets",
+    "Share validation logic between frontend and backend using Zod"
+  ]
+} 

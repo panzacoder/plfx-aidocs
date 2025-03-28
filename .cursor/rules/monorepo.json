@@ -1,0 +1,101 @@
+{
+  "name": "Monorepo Structure",
+  "description": "This project is organized as a monorepo with multiple applications and shared packages",
+  "rules": [
+    {
+      "name": "Applications",
+      "description": "Main application packages",
+      "rules": [
+        {
+          "name": "Main Application",
+          "description": "The primary Next.js application",
+          "pattern": "apps/app/**/*",
+          "notes": [
+            "Next.js application with TypeScript and Tailwind",
+            "Uses shared UI components and utilities",
+            "Integrates with Convex backend",
+            "Environment variables in .env files",
+            "Follows Next.js app directory structure"
+          ]
+        },
+        {
+          "name": "Marketing Website",
+          "description": "Public marketing website",
+          "pattern": "apps/web/**/*",
+          "notes": [
+            "Marketing and landing pages",
+            "Uses shared UI components",
+            "Static content and blog"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Shared Packages",
+      "description": "Reusable packages shared across applications",
+      "rules": [
+        {
+          "name": "UI Package",
+          "description": "Shared UI components and styles",
+          "pattern": "packages/ui/**/*",
+          "notes": [
+            "Shadcn UI components",
+            "Tailwind configuration",
+            "TypeScript component definitions",
+            "Storybook documentation"
+          ]
+        },
+        {
+          "name": "Analytics Package",
+          "description": "Analytics and tracking utilities",
+          "pattern": "packages/analytics/**/*",
+          "notes": [
+            "Analytics implementation",
+            "Event tracking utilities",
+            "Type-safe event definitions"
+          ]
+        },
+        {
+          "name": "Email Package",
+          "description": "Email templates and sending utilities",
+          "pattern": "packages/email/**/*",
+          "notes": [
+            "React email templates",
+            "Email sending utilities",
+            "Template preview functionality"
+          ]
+        },
+        {
+          "name": "Logger Package",
+          "description": "Shared logging utilities",
+          "pattern": "packages/logger/**/*",
+          "notes": [
+            "Structured logging implementation",
+            "Error tracking integration",
+            "Development utilities"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Backend Package",
+      "description": "The Convex backend is located in the packages/backend directory",
+      "pattern": "packages/backend/**/*",
+      "notes": [
+        "All Convex configuration, schema, and functions should be in packages/backend/convex/",
+        "Environment variables should be configured in packages/backend/.env.local",
+        "Backend-specific dependencies should be managed in packages/backend/package.json"
+      ]
+    }
+  ],
+  "recommendations": [
+    "Use workspace dependencies for shared packages",
+    "Maintain consistent TypeScript configurations",
+    "Share eslint and prettier configurations",
+    "Use Turborepo for build caching and pipeline management",
+    "Keep backend and frontend code strictly separated",
+    "Follow package-specific coding standards and best practices",
+    "Document cross-package dependencies clearly",
+    "Use changesets for version management"
+  ]
+} 
