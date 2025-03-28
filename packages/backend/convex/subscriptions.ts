@@ -15,7 +15,7 @@ import schema from "./schema";
 const createCheckout = async ({
   customerEmail,
   productPriceId,
-  successUrl
+  successUrl,
 }: {
   customerEmail: string;
   productPriceId: string;
@@ -28,7 +28,7 @@ const createCheckout = async ({
   const result = await polar.checkouts.create({
     productPriceId,
     successUrl,
-    customerEmail
+    customerEmail,
   });
   return result;
 };
@@ -49,6 +49,7 @@ export const getOnboardingCheckoutUrl = action({
   handler: async (ctx) => {
     const user = await ctx.runQuery(api.users.getUser);
     if (!user) {
+      console.error(JSON.stringify(ctx));
       throw new Error("User not found");
     }
     const product = await ctx.runQuery(internal.subscriptions.getPlanByKey, {
@@ -95,7 +96,7 @@ export const getProOnboardingCheckoutUrl = action({
     const checkout = await createCheckout({
       customerEmail: user.email,
       productPriceId: price.polarId,
-      successUrl: `${env.SITE_URL}/settings/billing`
+      successUrl: `${env.SITE_URL}/settings/billing`,
     });
     return checkout.url;
   },
@@ -120,9 +121,9 @@ export const getPolarEventUser = internalQuery({
   handler: async (ctx, args) => {
     const userById = args.polarId
       ? await ctx.db
-          .query("users")
-          .withIndex("polarId", (q) => q.eq("polarId", args.polarId))
-          .unique()
+        .query("users")
+        .withIndex("polarId", (q) => q.eq("polarId", args.polarId))
+        .unique()
       : undefined;
     const user =
       userById ||

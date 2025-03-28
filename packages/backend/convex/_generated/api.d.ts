@@ -22,6 +22,9 @@ import type * as init from "../init.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as users from "../users.js";
 import type * as utils_validators from "../utils/validators.js";
+import type * as validators_aiProviders from "../validators/aiProviders.js";
+import type * as validators_assistants from "../validators/assistants.js";
+import type * as validators_organizations from "../validators/organizations.js";
 import type * as web from "../web.js";
 
 /**
@@ -42,6 +45,9 @@ declare const fullApi: ApiFromModules<{
   subscriptions: typeof subscriptions;
   users: typeof users;
   "utils/validators": typeof utils_validators;
+  "validators/aiProviders": typeof validators_aiProviders;
+  "validators/assistants": typeof validators_assistants;
+  "validators/organizations": typeof validators_organizations;
   web: typeof web;
 }>;
 export declare const api: FilterApi<

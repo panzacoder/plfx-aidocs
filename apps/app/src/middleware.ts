@@ -13,13 +13,17 @@ const I18nMiddleware = createI18nMiddleware({
 });
 
 const isSignInPage = createRouteMatcher(["/login"]);
+const isSignOut = createRouteMatcher(["/logout"]);
 
-export default convexAuthNextjsMiddleware((request) => {
-  if (isSignInPage(request) && !!isAuthenticatedNextjs()) {
-    return nextjsMiddlewareRedirect(request, "/");
-  }
-  if (!isSignInPage(request) && !isAuthenticatedNextjs()) {
-    return nextjsMiddlewareRedirect(request, "/login");
+export default convexAuthNextjsMiddleware(async (request) => {
+  const isAuthenticated = await isAuthenticatedNextjs();
+  if (!isSignOut(request)) {
+    if (isSignInPage(request) && isAuthenticated) {
+      return nextjsMiddlewareRedirect(request, "/");
+    }
+    if (!isSignInPage(request) && !isAuthenticated) {
+      return nextjsMiddlewareRedirect(request, "/login");
+    }
   }
 
   return I18nMiddleware(request);

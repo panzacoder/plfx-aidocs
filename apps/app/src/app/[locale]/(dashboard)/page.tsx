@@ -9,6 +9,8 @@ import { buttonVariants } from "@v1/ui/button";
 import { cn } from "@v1/ui/utils";
 import { ExternalLink, Plus } from "lucide-react";
 
+import { AssistantForm } from "./_components/forms/assistant";
+
 export default async function Page() {
   const t = await getScopedI18n("dashboard");
 
@@ -34,6 +36,7 @@ export default async function Page() {
             <div className="relative mx-auto flex w-full  flex-col items-center p-6">
               <div className="relative flex w-full flex-col items-center justify-center gap-6 overflow-hidden rounded-lg border border-border bg-secondary px-6 py-24 dark:bg-card">
                 <div className="z-10 flex max-w-[460px] flex-col items-center gap-4">
+                  {/* <AssistantForm /> */}
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-card hover:border-primary/40">
                     <Plus className="h-8 w-8 stroke-[1.5px] text-primary/60" />
                   </div>

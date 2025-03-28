@@ -78,6 +78,9 @@ importers:
       '@xixixao/uploadstuff':
         specifier: ^0.0.5
         version: 0.0.5(react-dropzone@14.3.5(react@18.3.1))(react@18.3.1)(typescript@5.7.3)
+      '@zodform/core':
+        specifier: ^0.2.0
+        version: 0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod@3.24.1)
       convex:
         specifier: ^1.19.0
         version: 1.19.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -115,7 +118,7 @@ importers:
         specifier: ^2.14.0
         version: 2.20.1
       zod:
-        specifier: ^3.23.8
+        specifier: ^3.24.1
         version: 3.24.1
     devDependencies:
       '@sentry/nextjs':
@@ -2553,6 +2556,13 @@ packages:
   '@xtuc/long@4.2.2':
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
 
+  '@zodform/core@0.2.0':
+    resolution: {integrity: sha512-aUCIv4FBvFYg8arG8p/vulkN84cqgWhzF1dBcsSDJZoxq3xXIE0IAZEVsiqWoVR8j6lb3NWiNb4G9sT5mDbCGQ==}
+    peerDependencies:
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      zod: ^3.20.2
+
   '@zxing/text-encoding@0.9.0':
     resolution: {integrity: sha512-U/4aVJ2mxI0aDNI8Uq0wEhMgY+u4CNtEb0om3+y3+niDAsoTCOB33UF0sxpzqzdqXLqmvc+vZyAt4O8pPdfkwA==}
 
@@ -3256,6 +3266,9 @@ packages:
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
 
+  immer@9.0.21:
+    resolution: {integrity: sha512-bc4NBHqOqSfRW7POMkHd51LvClaeMXpm8dx0e8oE2GORbq5aRK7Bxl4FyzVLdGtLmvLKL7BTDBG5ACQm4HWjTA==}
+
   import-in-the-middle@1.13.0:
     resolution: {integrity: sha512-YG86SYDtrL/Yu8JgfWb7kjQ0myLeT1whw6fs/ZHFkXFcbk9zJU9lOCsSJHpvaPumU11nN3US7NW6x1YTk+HrUA==}
 
@@ -3409,6 +3422,9 @@ packages:
 
   lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
+
+  lodash.set@4.3.2:
+    resolution: {integrity: sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==}
 
   log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
@@ -3953,6 +3969,9 @@ packages:
     resolution: {integrity: sha512-57frrGM/OCTLqLOAh0mhVA9VBMHd+9U7Zb2THMGdBUoZVOtGbJzjxsYGDJ3A9AYYCP4hn6y1TVbaOfzWtm5GFg==}
     engines: {node: '>= 12.13.0'}
 
+  remeda@1.61.0:
+    resolution: {integrity: sha512-caKfSz9rDeSKBQQnlJnVW3mbVdFgxgGWQKq1XlFokqjf+hQD5gxutLGTTY2A/x24UxVyJe9gH5fAkFI63ULw4A==}
+
   remeda@2.20.1:
     resolution: {integrity: sha512-gsEsSmjE0CHkNp6xEsWsU/6JVNWq7rqw+ZfzNMbVV4YFIPtTj/i0FfxurTRI6Z9sAnQufU9de2Cb3xHsUTFTMA==}
 
@@ -4296,6 +4315,10 @@ packages:
   type-fest@0.7.1:
     resolution: {integrity: sha512-Ne2YiiGN8bmrmJJEuTWTLJR32nh/JdL1+PSicowtNb0WFpn59GK8/lfD61bVtzguz7b3PBt74nxpv/Pw5po5Rg==}
     engines: {node: '>=8'}
+
+  type-fest@3.13.1:
+    resolution: {integrity: sha512-tLq3bSNx+xSpwvAJnzrK0Ep5CLNWjvFTOp71URMaAEWBfRb9nnJiBoUe0tF8bI4ZFO3omgBR6NvnbzVUT3Ly4g==}
+    engines: {node: '>=14.16'}
 
   type-fest@4.34.1:
     resolution: {integrity: sha512-6kSc32kT0rbwxD6QL1CYe8IqdzN/J/ILMrNK+HMQCKH3insCDRY/3ITb0vcBss0a3t72fzh2YSzj8ko1HgwT3g==}
@@ -6546,6 +6569,16 @@ snapshots:
 
   '@xtuc/long@4.2.2': {}
 
+  '@zodform/core@0.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zod@3.24.1)':
+    dependencies:
+      immer: 9.0.21
+      lodash.set: 4.3.2
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      remeda: 1.61.0
+      type-fest: 3.13.1
+      zod: 3.24.1
+
   '@zxing/text-encoding@0.9.0':
     optional: true
 
@@ -7267,6 +7300,8 @@ snapshots:
 
   ieee754@1.2.1: {}
 
+  immer@9.0.21: {}
+
   import-in-the-middle@1.13.0:
     dependencies:
       acorn: 8.14.0
@@ -7401,6 +7436,8 @@ snapshots:
       p-locate: 5.0.0
 
   lodash.debounce@4.0.8: {}
+
+  lodash.set@4.3.2: {}
 
   log-symbols@4.1.0:
     dependencies:
@@ -7917,6 +7954,8 @@ snapshots:
 
   real-require@0.2.0: {}
 
+  remeda@1.61.0: {}
+
   remeda@2.20.1:
     dependencies:
       type-fest: 4.34.1
@@ -8304,6 +8343,8 @@ snapshots:
       turbo-windows-arm64: 2.4.0
 
   type-fest@0.7.1: {}
+
+  type-fest@3.13.1: {}
 
   type-fest@4.34.1: {}
 

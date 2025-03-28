@@ -1,6 +1,9 @@
 import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { type Infer, v } from "convex/values";
+import { AIProviders } from "./validators/aiProviders";
+import { Assistants } from "./validators/assistants";
+import { Organizations } from "./validators/organizations";
 
 export const CURRENCIES = {
   USD: "usd",
@@ -86,4 +89,7 @@ export default defineSchema({
   })
     .index("userId", ["userId"])
     .index("polarId", ["polarId"]),
+  organizations: Organizations.table.index("by_ownerId", ["ownerId"]),
+  aiProviders: AIProviders.table.index("by_organizationId", ["organizationId"]),
+  assistants: Assistants.table.index("by_aiProviderId", ["aiProviderId"]),
 });
