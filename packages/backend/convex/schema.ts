@@ -1,47 +1,11 @@
 import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
-import { type Infer, v } from "convex/values";
+import { v } from "convex/values";
 import { AIProviders } from "./validators/aiProviders";
 import { Assistants } from "./validators/assistants";
 import { Organizations } from "./validators/organizations";
-
-export const CURRENCIES = {
-  USD: "usd",
-  EUR: "eur",
-} as const;
-export const currencyValidator = v.union(
-  v.literal(CURRENCIES.USD),
-  v.literal(CURRENCIES.EUR),
-);
-export type Currency = Infer<typeof currencyValidator>;
-
-export const INTERVALS = {
-  MONTH: "month",
-  YEAR: "year",
-} as const;
-export const intervalValidator = v.union(
-  v.literal(INTERVALS.MONTH),
-  v.literal(INTERVALS.YEAR),
-);
-export type Interval = Infer<typeof intervalValidator>;
-
-export const PLANS = {
-  FREE: "free",
-  PRO: "pro",
-} as const;
-export const planKeyValidator = v.union(
-  v.literal(PLANS.FREE),
-  v.literal(PLANS.PRO),
-);
-export type PlanKey = Infer<typeof planKeyValidator>;
-
-const priceValidator = v.object({
-  polarId: v.string(),
-  amount: v.number(),
-});
-const pricesValidator = v.object({
-  [CURRENCIES.USD]: priceValidator,
-});
+import { Plans } from "./validators/plans";
+import { Subscriptions } from "./validators/subscriptions";
 
 export default defineSchema({
   ...authTables,
@@ -63,30 +27,10 @@ export default defineSchema({
   })
     .index("email", ["email"])
     .index("polarId", ["polarId"]),
-  plans: defineTable({
-    key: planKeyValidator,
-    polarProductId: v.string(),
-    name: v.string(),
-    description: v.string(),
-    prices: v.object({
-      [INTERVALS.MONTH]: v.optional(pricesValidator),
-      [INTERVALS.YEAR]: v.optional(pricesValidator),
-    }),
-  })
+  plans: Plans.table
     .index("key", ["key"])
     .index("polarProductId", ["polarProductId"]),
-  subscriptions: defineTable({
-    userId: v.id("users"),
-    planId: v.id("plans"),
-    polarId: v.string(),
-    polarPriceId: v.string(),
-    currency: currencyValidator,
-    interval: intervalValidator,
-    status: v.string(),
-    currentPeriodStart: v.optional(v.number()),
-    currentPeriodEnd: v.optional(v.number()),
-    cancelAtPeriodEnd: v.optional(v.boolean()),
-  })
+  subscriptions: Subscriptions.table
     .index("userId", ["userId"])
     .index("polarId", ["polarId"]),
   organizations: Organizations.table.index("by_ownerId", ["ownerId"]),

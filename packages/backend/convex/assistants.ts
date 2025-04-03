@@ -3,6 +3,13 @@ import { mutation, query } from "./_generated/server";
 import { AssistantDoc } from "./validators/assistants";
 import { Id } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import {
+  createAssistantSchema,
+  deleteAssistantSchema,
+  getAssistantSchema,
+  listAssistantsSchema,
+  updateAssistantSchema,
+} from "./schemas/assistants";
 
 const assistantValidator = v.object({
   _id: v.id("assistants"),
@@ -23,6 +30,9 @@ export const createAssistant = mutation({
     if (!userId) {
       throw new Error("Not authenticated");
     }
+
+    // Validate with Zod schema
+    createAssistantSchema.parse(args);
 
     // Verify the AI Provider exists and user has access
     const provider = await ctx.db.get(args.aiProviderId);
@@ -58,6 +68,9 @@ export const listAssistants = query({
       throw new Error("Not authenticated");
     }
 
+    // Validate with Zod schema
+    listAssistantsSchema.parse(args);
+
     // Verify the AI Provider exists and user has access
     const provider = await ctx.db.get(args.aiProviderId);
     if (!provider) {
@@ -89,6 +102,9 @@ export const getAssistant = query({
       throw new Error("Not authenticated");
     }
 
+    // Validate with Zod schema
+    getAssistantSchema.parse(args);
+
     const assistant = await ctx.db.get(args.assistantId);
     if (!assistant) {
       return null;
@@ -118,6 +134,9 @@ export const updateAssistant = mutation({
     if (!userId) {
       throw new Error("Not authenticated");
     }
+
+    // Validate with Zod schema
+    updateAssistantSchema.parse(args);
 
     const assistant = await ctx.db.get(args.assistantId);
     if (!assistant) {
@@ -156,6 +175,9 @@ export const deleteAssistant = mutation({
     if (!userId) {
       throw new Error("Not authenticated");
     }
+
+    // Validate with Zod schema
+    deleteAssistantSchema.parse(args);
 
     const assistant = await ctx.db.get(args.assistantId);
     if (!assistant) {

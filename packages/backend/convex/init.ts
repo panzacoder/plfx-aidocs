@@ -3,7 +3,10 @@ import { asyncMap } from "convex-helpers";
 import { internal } from "./_generated/api";
 import { internalAction, internalMutation } from "./_generated/server";
 import { env } from "./env";
-import schema, { CURRENCIES, INTERVALS, type PlanKey, PLANS } from "./schema";
+import schema from "./schema";
+import { CURRENCIES, INTERVALS, PLANS } from "./validators/constants";
+
+type PlanKey = (typeof PLANS)[keyof typeof PLANS];
 
 const seedProducts = [
   {
