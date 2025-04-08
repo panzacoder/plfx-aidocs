@@ -1,8 +1,8 @@
 import { zodToConvexFields } from "convex-helpers/server/zod";
 import { Table } from "convex-helpers/server";
 import { z } from "zod";
-import { Doc } from "../_generated/dataModel";
-import { PLANS, CURRENCIES, INTERVALS } from "./constants";
+import { Doc } from "@/_generated/dataModel";
+import { PLANS, CURRENCIES, INTERVALS } from "@/constants";
 
 const price = {
   polarId: z.string(),

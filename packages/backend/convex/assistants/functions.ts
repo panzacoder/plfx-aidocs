@@ -1,7 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { AssistantDoc } from "./validators/assistants";
-import { Id } from "./_generated/dataModel";
+import { mutation, query } from "@/_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import {
   createAssistantSchema,
@@ -9,7 +7,7 @@ import {
   getAssistantSchema,
   listAssistantsSchema,
   updateAssistantSchema,
-} from "./schemas/assistants";
+} from "./validators";
 
 const assistantValidator = v.object({
   _id: v.id("assistants"),
@@ -81,8 +79,8 @@ export const listAssistants = query({
 
     const assistants = await ctx.db
       .query("assistants")
-      .withIndex("by_aiProviderId", (q) => 
-        q.eq("aiProviderId", args.aiProviderId)
+      .withIndex("by_aiProviderId", (q) =>
+        q.eq("aiProviderId", args.aiProviderId),
       )
       .collect();
 
@@ -195,4 +193,4 @@ export const deleteAssistant = mutation({
     await ctx.db.delete(args.assistantId);
     return null;
   },
-}); 
+});

@@ -17,11 +17,15 @@ export default async function Layout({
   if (!token) {
     return redirect("/login");
   }
-  const user = await fetchQuery(api.users.getUser, {}, { token });
+  const user = await fetchQuery(api.users.functions.getUser, {}, { token });
   if (!user?.username || !user?.subscription) {
     return redirect("/onboarding");
   }
-  const preloadedUser = await preloadQuery(api.users.getUser, {}, { token });
+  const preloadedUser = await preloadQuery(
+    api.users.functions.getUser,
+    {},
+    { token },
+  );
   return (
     <div className="flex min-h-[100vh] w-full flex-col bg-secondary dark:bg-black">
       <Navigation preloadedUser={preloadedUser} />

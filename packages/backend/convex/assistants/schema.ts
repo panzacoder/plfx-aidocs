@@ -1,7 +1,7 @@
 import { zid, zodToConvexFields } from "convex-helpers/server/zod";
 import { Table } from "convex-helpers/server";
 import { z } from "zod";
-import { Doc } from "../_generated/dataModel";
+import { Doc } from "@/_generated/dataModel";
 
 export const assistants = {
   aiProviderId: zid("aiProviders"),

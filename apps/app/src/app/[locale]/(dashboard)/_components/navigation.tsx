@@ -29,7 +29,7 @@ import { ThemeSwitcher } from "./theme-switcher";
 export function Navigation({
   preloadedUser,
 }: {
-  preloadedUser: Preloaded<typeof api.users.getUser>;
+  preloadedUser: Preloaded<typeof api.users.functions.getUser>;
 }) {
   const { signOut } = useAuthActions();
   const pathname = usePathname();

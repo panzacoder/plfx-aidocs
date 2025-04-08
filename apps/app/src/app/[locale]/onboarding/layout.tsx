@@ -16,9 +16,9 @@ export default async function Layout({
     return redirect("/login");
   }
 
-  const user = await fetchQuery(api.users.getUser, {}, { token });
+  const user = await fetchQuery(api.users.functions.getUser, {}, { token });
   const checkoutUrl = await fetchAction(
-    api.subscriptions.getOnboardingCheckoutUrl,
+    api.subscriptions.functions.getOnboardingCheckoutUrl,
     {},
     { token },
   );
@@ -27,7 +27,7 @@ export default async function Layout({
   }
   if (!user?.subscription && !user?.polarSubscriptionPendingId) {
     await fetchMutation(
-      api.subscriptions.setSubscriptionPending,
+      api.subscriptions.functions.setSubscriptionPending,
       {},
       { token },
     );

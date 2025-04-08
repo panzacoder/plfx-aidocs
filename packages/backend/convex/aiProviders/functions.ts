@@ -1,8 +1,6 @@
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { AIProviderDoc } from "./validators/aiProviders";
-import { Id } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import { mutation, query } from "@/_generated/server";
 
 const aiProviderValidator = v.object({
   _id: v.id("aiProviders"),
@@ -58,8 +56,8 @@ export const listAIProviders = query({
 
     const providers = await ctx.db
       .query("aiProviders")
-      .withIndex("by_organizationId", (q) => 
-        q.eq("organizationId", args.organizationId)
+      .withIndex("by_organizationId", (q) =>
+        q.eq("organizationId", args.organizationId),
       )
       .collect();
 
@@ -145,8 +143,8 @@ export const deleteAIProvider = mutation({
     // Check if there are any assistants using this provider
     const assistants = await ctx.db
       .query("assistants")
-      .withIndex("by_aiProviderId", (q) => 
-        q.eq("aiProviderId", args.providerId)
+      .withIndex("by_aiProviderId", (q) =>
+        q.eq("aiProviderId", args.providerId),
       )
       .collect();
 
@@ -157,4 +155,4 @@ export const deleteAIProvider = mutation({
     await ctx.db.delete(args.providerId);
     return null;
   },
-}); 
+});

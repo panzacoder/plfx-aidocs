@@ -13,9 +13,9 @@ import { useEffect } from "react";
 import { useFormStatus } from "react-dom";
 
 export default function OnboardingUsername() {
-  const user = useQuery(api.users.getUser);
-  const updateUsername = useMutation(api.users.updateUsername);
+  const user = useQuery(api.users.functions.getUser);
   const router = useRouter();
+  const updateUsername = useMutation(api.users.functions.updateUsername);
 
   const { pending } = useFormStatus();
 

@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { env } from "../../env";
+import { env } from "@/env";
 import { sendEmail } from "../index";
 import {
   renderSubscriptionErrorEmail,

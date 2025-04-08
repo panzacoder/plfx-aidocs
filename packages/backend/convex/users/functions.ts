@@ -1,9 +1,8 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { asyncMap } from "convex-helpers";
 import { v } from "convex/values";
-import { z } from "zod";
-import { mutation, query } from "./_generated/server";
-import { username } from "./utils/validators";
+import { mutation, query } from "@/_generated/server";
+import { username } from "@/utils/validators";
 
 export const getUser = query({
   handler: async (ctx) => {

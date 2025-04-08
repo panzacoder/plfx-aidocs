@@ -17,11 +17,11 @@ import { useState } from "react";
 
 export default function DashboardSettings() {
   const t = useScopedI18n("settings");
-  const user = useQuery(api.users.getUser);
-  const updateUserImage = useMutation(api.users.updateUserImage);
-  const updateUsername = useMutation(api.users.updateUsername);
-  const removeUserImage = useMutation(api.users.removeUserImage);
-  const generateUploadUrl = useMutation(api.users.generateUploadUrl);
+  const user = useQuery(api.users.functions.getUser);
+  const updateUserImage = useMutation(api.users.functions.updateUserImage);
+  const updateUsername = useMutation(api.users.functions.updateUsername);
+  const removeUserImage = useMutation(api.users.functions.removeUserImage);
+  const generateUploadUrl = useMutation(api.users.functions.generateUploadUrl);
 
   const [isUnsubscribeModalOpen, setIsUnsubscribeModalOpen] = useState(false);
 
@@ -138,10 +138,9 @@ export default function DashboardSettings() {
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
-                className={`w-80 bg-transparent ${
-                  field.state.meta?.errors.length > 0 &&
+                className={`w-80 bg-transparent ${field.state.meta?.errors.length > 0 &&
                   "border-destructive focus-visible:ring-destructive"
-                }`}
+                  }`}
               />
             )}
           />

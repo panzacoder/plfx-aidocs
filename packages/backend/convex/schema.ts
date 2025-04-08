@@ -1,32 +1,15 @@
 import { authTables } from "@convex-dev/auth/server";
-import { defineSchema, defineTable } from "convex/server";
-import { v } from "convex/values";
-import { AIProviders } from "./validators/aiProviders";
-import { Assistants } from "./validators/assistants";
-import { Organizations } from "./validators/organizations";
-import { Plans } from "./validators/plans";
-import { Subscriptions } from "./validators/subscriptions";
+import { defineSchema } from "convex/server";
+import { AIProviders } from "@/aiProviders/schema";
+import { Assistants } from "@/assistants/schema";
+import { Organizations } from "@/organizations/schema";
+import { Plans } from "@/plans/schema";
+import { Subscriptions } from "@/subscriptions/schema";
+import { Users } from "@/users/schema";
 
 export default defineSchema({
   ...authTables,
-  users: defineTable({
-    // Convex Auth fields
-    name: v.optional(v.string()),
-    image: v.optional(v.string()),
-    email: v.optional(v.string()),
-    emailVerificationTime: v.optional(v.number()),
-    phone: v.optional(v.string()),
-    phoneVerificationTime: v.optional(v.number()),
-    isAnonymous: v.optional(v.boolean()),
-
-    // custom fields
-    username: v.optional(v.string()),
-    imageId: v.optional(v.id("_storage")),
-    polarId: v.optional(v.string()),
-    polarSubscriptionPendingId: v.optional(v.id("_scheduled_functions")),
-  })
-    .index("email", ["email"])
-    .index("polarId", ["polarId"]),
+  users: Users.table.index("email", ["email"]).index("polarId", ["polarId"]),
   plans: Plans.table
     .index("key", ["key"])
     .index("polarProductId", ["polarProductId"]),

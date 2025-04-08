@@ -1,16 +1,16 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Polar } from "@polar-sh/sdk";
 import { v } from "convex/values";
-import { api, internal } from "./_generated/api";
+import { api, internal } from "@/_generated/api";
 import {
   action,
   internalMutation,
   internalQuery,
   mutation,
   query,
-} from "./_generated/server";
-import { env } from "./env";
-import schema from "./schema";
+} from "@/_generated/server";
+import { env } from "@/env";
+import schema from "@/schema";
 
 const createCheckout = async ({
   customerEmail,
@@ -47,7 +47,7 @@ export const getPlanByKey = internalQuery({
 
 export const getOnboardingCheckoutUrl = action({
   handler: async (ctx) => {
-    const user = await ctx.runQuery(api.users.getUser);
+    const user = await ctx.runQuery(api.users.functions.getUser);
     if (!user) {
       console.error(JSON.stringify(ctx));
       throw new Error("User not found");
@@ -76,7 +76,7 @@ export const getProOnboardingCheckoutUrl = action({
     interval: schema.tables.subscriptions.validator.fields.interval,
   },
   handler: async (ctx, args) => {
-    const user = await ctx.runQuery(api.users.getUser);
+    const user = await ctx.runQuery(api.users.functions.getUser);
     if (!user) {
       throw new Error("User not found");
     }
