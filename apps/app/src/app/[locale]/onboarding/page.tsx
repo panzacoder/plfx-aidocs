@@ -94,9 +94,10 @@ export default function OnboardingUsername() {
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
-                className={`bg-transparent ${field.state.meta?.errors.length > 0 &&
+                className={`bg-transparent ${
+                  field.state.meta?.errors.length > 0 &&
                   "border-destructive focus-visible:ring-destructive"
-                  }`}
+                }`}
               />
             )}
           />

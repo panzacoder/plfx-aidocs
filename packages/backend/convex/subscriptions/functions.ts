@@ -11,6 +11,7 @@ import {
 } from "@/_generated/server";
 import { env } from "@/env";
 import schema from "@/schema";
+import { PlanDoc } from "@/plans/schema";
 
 const createCheckout = async ({
   customerEmail,
@@ -103,6 +104,29 @@ export const getProOnboardingCheckoutUrl = action({
 });
 
 export const listPlans = query({
+  args: {},
+  returns: v.array(v.object({
+    _id: v.id("plans"),
+    _creationTime: v.number(),
+    key: schema.tables.plans.validator.fields.key,
+    polarProductId: v.string(),
+    name: v.string(),
+    description: v.string(),
+    prices: v.object({
+      month: v.optional(v.object({
+        usd: v.object({
+          polarId: v.string(),
+          amount: v.number(),
+        }),
+      })),
+      year: v.optional(v.object({
+        usd: v.object({
+          polarId: v.string(),
+          amount: v.number(),
+        }),
+      })),
+    }),
+  })),
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {

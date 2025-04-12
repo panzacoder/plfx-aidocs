@@ -8,6 +8,8 @@ import { Button } from "@v1/ui/button";
 import { Switch } from "@v1/ui/switch";
 import { useAction, useQuery } from "convex/react";
 import { useState } from "react";
+import { Doc } from "@v1/backend/convex/_generated/dataModel";
+import type { FunctionReturnType } from "convex/server";
 
 export default function BillingSettings() {
   const user = useQuery(api.users.functions.getUser);
@@ -22,8 +24,8 @@ export default function BillingSettings() {
 
   const currency = getLocaleCurrency();
 
-  const freePlan = plans?.find((plan) => plan.key === PLANS.FREE);
-  const proPlan = plans?.find((plan) => plan.key === PLANS.PRO);
+  const freePlan = plans?.find((plan: Doc<"plans">) => plan.key === PLANS.FREE);
+  const proPlan = plans?.find((plan: Doc<"plans">) => plan.key === PLANS.PRO);
 
   const handleUpgradeCheckout = async () => {
     const url = await getUpgradeCheckoutUrl({ interval: selectedPlanInterval });
@@ -67,7 +69,7 @@ export default function BillingSettings() {
             <span className="flex h-[18px] items-center rounded-md bg-primary/10 px-1.5 text-sm font-medium text-primary/80">
               {user.plan?.key
                 ? user.plan?.key.charAt(0).toUpperCase() +
-                user.plan?.key.slice(1)
+                  user.plan?.key.slice(1)
                 : "Free"}
             </span>
             plan.
@@ -76,11 +78,12 @@ export default function BillingSettings() {
 
         {user.subscription?.planId === freePlan?._id && (
           <div className="flex w-full flex-col items-center justify-evenly gap-2 border-border p-6 pt-0">
-            {plans.map((plan) => (
+            {plans.map((plan: Doc<"plans">) => (
               <div
                 key={plan._id}
-                className={`flex w-full select-none items-center rounded-md border border-border ${user.subscription?.planId === plan._id && "border-primary/60"
-                  }`}
+                className={`flex w-full select-none items-center rounded-md border border-border ${
+                  user.subscription?.planId === plan._id && "border-primary/60"
+                }`}
               >
                 <div className="flex w-full flex-col items-start p-4">
                   <div className="flex items-center gap-2">
@@ -94,7 +97,7 @@ export default function BillingSettings() {
                         {selectedPlanInterval === "month"
                           ? (plan.prices.month?.[currency]?.amount ?? 0) / 100
                           : (plan.prices.year?.[currency]?.amount ?? 0) /
-                          100}{" "}
+                            100}{" "}
                         / {selectedPlanInterval === "month" ? "month" : "year"}
                       </span>
                     )}
