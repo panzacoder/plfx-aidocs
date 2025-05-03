@@ -10,12 +10,23 @@ export const zMutation = zCustomMutation(mutation, NoOp);
 
 // Zod schemas for function arguments (used by both frontend and backend)
 export const createAssistantSchema = z.object({
-  aiProviderId: zid("aiProviders"),
-  externalId: z.string().min(1, "External ID is required"),
+  organizationId: zid("organizations"),
+  aiProviderId: zid("aiProviders").optional(),
+  name: z.string().min(1, "Name is required"),
+  model: z.enum(["gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]),
+  instructions: z.string().optional(),
+  description: z.string().optional(),
+  initialPrompt: z.string().optional(),
+  disclaimer: z.string().optional(),
+  mode: z.enum(["open", "restricted"]).default("open"),
+  restrictedResponse: z.string().optional(),
+  tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])).default(["retrieval"]),
+  fileIds: z.array(z.string()).default([]),
+  metadata: z.record(z.string(), z.string()).optional(),
 });
 
 export const listAssistantsSchema = z.object({
-  aiProviderId: zid("aiProviders"),
+  organizationId: zid("organizations"),
 });
 
 export const getAssistantSchema = z.object({
@@ -24,9 +35,34 @@ export const getAssistantSchema = z.object({
 
 export const updateAssistantSchema = z.object({
   assistantId: zid("assistants"),
-  externalId: z.string().min(1, "External ID is required"),
+  name: z.string().min(1, "Name is required").optional(),
+  model: z.enum(["gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]).optional(),
+  instructions: z.string().optional(),
+  description: z.string().optional(),
+  initialPrompt: z.string().optional(),
+  disclaimer: z.string().optional(),
+  mode: z.enum(["open", "restricted"]).optional(),
+  restrictedResponse: z.string().optional(),
+  tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])).optional(),
+  fileIds: z.array(z.string()).optional(),
+  metadata: z.record(z.string(), z.string()).optional(),
+  status: z.enum(["creating", "ready", "failed"]).optional(),
 });
 
 export const deleteAssistantSchema = z.object({
   assistantId: zid("assistants"),
+});
+
+export const syncAssistantSchema = z.object({
+  assistantId: zid("assistants"),
+});
+
+export const addFileToAssistantSchema = z.object({
+  assistantId: zid("assistants"),
+  fileId: z.string(),
+});
+
+export const removeFileFromAssistantSchema = z.object({
+  assistantId: zid("assistants"),
+  fileId: z.string(),
 });

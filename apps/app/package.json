@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@convex-dev/auth": "^0.0.80",
+    "@convex-dev/auth": "^0.0.82",
+    "@hookform/resolvers": "^5.0.1",
     "@polar-sh/sdk": "^0.25.0",
     "@tanstack/react-form": "^0.33.0",
     "@tanstack/zod-form-adapter": "^0.33.0",
@@ -32,6 +33,8 @@
     "nuqs": "^1.18.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-dropzone": "^14.3.8",
+    "react-hook-form": "^7.56.1",
     "remeda": "^2.14.0",
     "zod": "^3.24.1"
   },
