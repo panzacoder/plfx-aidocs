@@ -167,4 +167,47 @@ http.route({
   }),
 });
 
+http.route({
+  path: "/webhooks/polar",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const payload = await request.json();
+    const signature = request.headers.get("webhook-signature");
+    
+    if (!signature) {
+      return new Response("Missing signature", { status: 400 });
+    }
+    
+    // Verify webhook signature
+    try {
+      const webhook = new Webhook(env.POLAR_WEBHOOK_SECRET);
+      const event = await webhook.verify(JSON.stringify(payload), signature);
+      
+      // Process different event types
+      switch (event.type) {
+        case "subscription.created":
+          await ctx.runAction(internal.webhooks.handleSubscriptionCreated, { event });
+          break;
+        case "subscription.updated":
+          await ctx.runAction(internal.webhooks.handleSubscriptionUpdated, { event });
+          break;
+        case "subscription.canceled":
+          await ctx.runAction(internal.webhooks.handleSubscriptionCanceled, { event });
+          break;
+        case "customer.created":
+        case "customer.updated":
+          await ctx.runAction(internal.webhooks.handleCustomerEvent, { event });
+          break;
+        default:
+          console.log(`Unhandled webhook event: ${event.type}`);
+      }
+      
+      return new Response(null, { status: 200 });
+    } catch (error) {
+      console.error("Webhook verification failed:", error);
+      return new Response("Invalid signature", { status: 403 });
+    }
+  }),
+});
+
 export default http;

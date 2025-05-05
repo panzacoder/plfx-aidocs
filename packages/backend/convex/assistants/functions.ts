@@ -125,7 +125,7 @@ export const listAssistants = query({
 
     const assistants = await ctx.db
       .query("assistants")
-      .withIndex("by_organizationId", (q) =>
+      .withIndex("organizationId", (q) =>
         q.eq("organizationId", args.organizationId),
       )
       .collect();
@@ -296,7 +296,7 @@ export const deleteAssistant = mutation({
     // Delete related files
     const files = await ctx.db
       .query("files")
-      .withIndex("by_assistantId", (q) => q.eq("assistantId", args.assistantId))
+      .withIndex("assistantId", (q) => q.eq("assistantId", args.assistantId))
       .collect();
     
     for (const file of files) {

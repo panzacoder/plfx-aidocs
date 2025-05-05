@@ -147,7 +147,7 @@ export const listFiles = query({
     // Retrieve the files
     const files = await ctx.db
       .query("files")
-      .withIndex("by_assistantId", (q) => q.eq("assistantId", args.assistantId))
+      .withIndex("assistantId", (q) => q.eq("assistantId", args.assistantId))
       .collect();
 
     return files;

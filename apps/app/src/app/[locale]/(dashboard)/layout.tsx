@@ -18,9 +18,14 @@ export default async function Layout({
     return redirect("/login");
   }
   const user = await fetchQuery(api.users.functions.getUser, {}, { token });
-  if (!user?.username || !user?.subscription) {
+  
+  // Check for username and organizationId (not subscription which was removed)
+  // Note: Type inference is lost for nested paths like users.functions.*
+  // This is a TypeScript limitation with deeply nested module paths
+  if (!user?.username || !user?.organizationId) {
     return redirect("/onboarding");
   }
+  
   const preloadedUser = await preloadQuery(
     api.users.functions.getUser,
     {},

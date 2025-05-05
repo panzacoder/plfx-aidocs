@@ -1,7 +1,6 @@
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { api } from "@v1/backend/convex/_generated/api";
-import { fetchAction, fetchMutation, fetchQuery } from "convex/nextjs";
-import { Loader2 } from "lucide-react";
+import { fetchQuery } from "convex/nextjs";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 
@@ -16,24 +15,14 @@ export default async function Layout({
     return redirect("/login");
   }
 
+  // Check if user exists
   const user = await fetchQuery(api.users.functions.getUser, {}, { token });
-  const checkoutUrl = await fetchAction(
-    api.subscriptions.functions.getOnboardingCheckoutUrl,
-    {},
-    { token },
-  );
-  if (!checkoutUrl) {
-    return null;
-  }
-  if (!user?.subscription && !user?.polarSubscriptionPendingId) {
-    await fetchMutation(
-      api.subscriptions.functions.setSubscriptionPending,
-      {},
-      { token },
-    );
-    return redirect(checkoutUrl);
+  if (!user) {
+    return redirect("/login");
   }
 
+  // No more subscription redirects needed with organization-based model
+  
   return (
     <div className="relative flex h-screen w-full bg-card">
       <div className="absolute left-1/2 top-8 mx-auto -translate-x-1/2 transform justify-center">

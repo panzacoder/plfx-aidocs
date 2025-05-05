@@ -11,7 +11,7 @@ export const onUserCreation = internalMutation({
     // Check if the user already has an organization
     const organization = await ctx.db
       .query("organizations")
-      .withIndex("by_ownerId", (q) => q.eq("ownerId", args.userId))
+      .withIndex("ownerId", (q) => q.eq("ownerId", args.userId))
       .first();
     
     // If not, create a personal organization

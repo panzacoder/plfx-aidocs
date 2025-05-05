@@ -1,13 +1,12 @@
 import { Polar } from "@polar-sh/sdk";
 import { asyncMap } from "convex-helpers";
-import { internal } from "@/_generated/api";
-import { internalAction, internalMutation } from "@/_generated/server";
+import { internalAction } from "@/_generated/server";
 import { env } from "@/env";
-import schema from "@/schema";
 import { CURRENCIES, INTERVALS, PLANS } from "@/constants";
 
 type PlanKey = (typeof PLANS)[keyof typeof PLANS];
 
+// Define our product offerings - these will be created in Polar but not stored locally
 const seedProducts = [
   {
     key: PLANS.FREE,
@@ -36,37 +35,27 @@ const seedProducts = [
   },
 ] as const;
 
-export const insertSeedPlan = internalMutation({
-  args: schema.tables.plans.validator,
-  handler: async (ctx, args) => {
-    await ctx.db.insert("plans", {
-      polarProductId: args.polarProductId,
-      key: args.key,
-      name: args.name,
-      description: args.description,
-      prices: args.prices,
-    });
-  },
-});
-
 export default internalAction(async (ctx) => {
   /**
-   * Stripe Products.
+   * Initialize Polar Products.
    */
   const polar = new Polar({
     server: "sandbox",
     accessToken: env.POLAR_ACCESS_TOKEN,
   });
-  const products = await polar.products.list({
+  
+  // Check if products already exist
+  const existingProducts = await polar.products.list({
     isArchived: false,
   });
-  if (products?.result?.items?.length) {
-    console.info("🏃‍♂️ Skipping Polar products creation and seeding.");
+  if (existingProducts?.result?.items?.length) {
+    console.info("🏃‍♂️ Skipping Polar products creation - products already exist.");
     return;
   }
 
-  await asyncMap(seedProducts, async (product) => {
-    // Create Polar product.
+  // Create products in Polar
+  const createdProducts = await asyncMap(seedProducts, async (product) => {
+    // Create Polar product
     const polarProduct = await polar.products.create({
       name: product.name,
       description: product.description,
@@ -76,6 +65,10 @@ export default internalAction(async (ctx) => {
         recurringInterval: interval,
       })),
     });
+    
+    console.info(`Created Polar product: ${product.name} (${polarProduct.id})`);
+    
+    // Map prices for reference
     const monthPrice = polarProduct.prices.find(
       (price) =>
         price.type === "recurring" &&
@@ -86,42 +79,20 @@ export default internalAction(async (ctx) => {
         price.type === "recurring" &&
         price.recurringInterval === INTERVALS.YEAR,
     );
-
-    await ctx.runMutation(internal.init.insertSeedPlan, {
-      polarProductId: polarProduct.id,
-      key: product.key as PlanKey,
+    
+    // Return product info for logging
+    return {
+      key: product.key,
       name: product.name,
-      description: product.description,
-      prices: {
-        ...(!monthPrice
-          ? {}
-          : {
-            month: {
-              usd: {
-                polarId: monthPrice?.id,
-                amount:
-                  monthPrice.amountType === "fixed"
-                    ? monthPrice.priceAmount
-                    : 0,
-              },
-            },
-          }),
-        ...(!yearPrice
-          ? {}
-          : {
-            year: {
-              usd: {
-                polarId: yearPrice?.id,
-                amount:
-                  yearPrice.amountType === "fixed"
-                    ? yearPrice.priceAmount
-                    : 0,
-              },
-            },
-          }),
-      },
-    });
+      id: polarProduct.id,
+      monthPriceId: monthPrice?.id,
+      yearPriceId: yearPrice?.id,
+    };
   });
 
-  console.info("📦 Polar Products have been successfully created.");
+  console.info("📦 Polar Products have been successfully created:");
+  console.info(JSON.stringify(createdProducts, null, 2));
+  
+  // Reminder about adding plan IDs to the UI
+  console.info("\n⚠️ Important: Update the planIdMap in your billing page with these Polar product/price IDs");
 });

@@ -8,12 +8,13 @@ import { zodValidator } from "@tanstack/zod-form-adapter";
 import { api } from "@v1/backend/convex/_generated/api";
 import type { Id } from "@v1/backend/convex/_generated/dataModel";
 import * as validators from "@v1/backend/convex/utils/validators";
+import { PLANS } from "@v1/backend/convex/constants";
 import { Button } from "@v1/ui/button";
 import { Input } from "@v1/ui/input";
 import { UploadInput } from "@v1/ui/upload-input";
 import { useDoubleCheck } from "@v1/ui/utils";
 import type { UploadFileResponse } from "@xixixao/uploadstuff/react";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { Upload } from "lucide-react";
 import { useState } from "react";
 
@@ -25,7 +26,7 @@ export default function DashboardSettings() {
   const updateUsername = useMutation(api.users.functions.updateUsername);
   const removeUserImage = useMutation(api.users.functions.removeUserImage);
   const generateUploadUrl = useMutation(api.users.functions.generateUploadUrl);
-  const deleteCurrentUserAccount = useMutation(
+  const deleteCurrentUserAccount = useAction(
     api.users.functions.deleteCurrentUserAccount,
   );
   const { doubleCheck, getButtonProps } = useDoubleCheck();
@@ -39,20 +40,28 @@ export default function DashboardSettings() {
   };
 
   const handleDeleteAccount = async () => {
-    console.log(user?.subscription);
-    if (
+    // Check if user has an active subscription that needs to be canceled first
+    const hasActiveSubscription = 
       user?.subscription?.status &&
       ["active", "incomplete"].includes(user.subscription.status) &&
-      !user.subscription.cancelAtPeriodEnd
-    ) {
+      !user.subscription.cancelAtPeriodEnd;
+    
+    // Only warn about subscription if it's a paid plan (not free)
+    const isPaidPlan = user?.plan?.key !== PLANS.FREE;
+      
+    if (hasActiveSubscription && isPaidPlan && user?.subscription?.polarId) {
       setIsUnsubscribeModalOpen(true);
     } else {
+      // Either no active subscription or on free plan, proceed with deletion
       await deleteCurrentUserAccount({});
       signOut();
     }
   };
 
-  const unsubscribeHref = `https://sandbox.polar.sh/purchases/subscriptions/${user?.subscription?.polarId}`;
+  // Only set unsubscribeHref if polarId exists
+  const unsubscribeHref = user?.subscription?.polarId 
+    ? `https://sandbox.polar.sh/purchases/subscriptions/${user.subscription.polarId}`
+    : "#";
 
   const usernameForm = useForm({
     validatorAdapter: zodValidator(),
@@ -67,6 +76,10 @@ export default function DashboardSettings() {
   if (!user) {
     return null;
   }
+
+  const hasErrors = 
+    usernameForm.state.fieldMeta.username?.errors && 
+    usernameForm.state.fieldMeta.username.errors.length > 0;
 
   return (
     <div className="flex h-full w-full flex-col gap-6">
@@ -164,9 +177,9 @@ export default function DashboardSettings() {
               />
             )}
           />
-          {usernameForm.state.fieldMeta.username?.errors.length > 0 && (
+          {hasErrors && (
             <p className="text-sm text-destructive dark:text-destructive-foreground">
-              {usernameForm.state.fieldMeta.username?.errors.join(" ")}
+              {usernameForm.state.fieldMeta.username?.errors?.join(" ")}
             </p>
           )}
         </div>

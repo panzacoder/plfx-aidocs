@@ -29,19 +29,24 @@ import type * as files_functions from "../files/functions.js";
 import type * as files_internal from "../files/internal.js";
 import type * as http from "../http.js";
 import type * as init from "../init.js";
+import type * as migrations from "../migrations.js";
 import type * as openai_client from "../openai/client.js";
 import type * as openai_files from "../openai/files.js";
+import type * as organizations_functions from "../organizations/functions.js";
+import type * as organizations_internal from "../organizations/internal.js";
 import type * as organizations_mutations from "../organizations/mutations.js";
 import type * as organizations_queries from "../organizations/queries.js";
+import type * as organizations_subscription from "../organizations/subscription.js";
 import type * as organizations from "../organizations.js";
 import type * as schemas_aiProviders from "../schemas/aiProviders.js";
 import type * as schemas_assistants from "../schemas/assistants.js";
-import type * as subscriptions_functions from "../subscriptions/functions.js";
 import type * as users_auth from "../users/auth.js";
 import type * as users_functions from "../users/functions.js";
 import type * as users_onboarding from "../users/onboarding.js";
+import type * as users from "../users.js";
 import type * as utils_validators from "../utils/validators.js";
 import type * as web from "../web.js";
+import type * as webhooks from "../webhooks.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -68,19 +73,24 @@ declare const fullApi: ApiFromModules<{
   "files/internal": typeof files_internal;
   http: typeof http;
   init: typeof init;
+  migrations: typeof migrations;
   "openai/client": typeof openai_client;
   "openai/files": typeof openai_files;
+  "organizations/functions": typeof organizations_functions;
+  "organizations/internal": typeof organizations_internal;
   "organizations/mutations": typeof organizations_mutations;
   "organizations/queries": typeof organizations_queries;
+  "organizations/subscription": typeof organizations_subscription;
   organizations: typeof organizations;
   "schemas/aiProviders": typeof schemas_aiProviders;
   "schemas/assistants": typeof schemas_assistants;
-  "subscriptions/functions": typeof subscriptions_functions;
   "users/auth": typeof users_auth;
   "users/functions": typeof users_functions;
   "users/onboarding": typeof users_onboarding;
+  users: typeof users;
   "utils/validators": typeof utils_validators;
   web: typeof web;
+  webhooks: typeof webhooks;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

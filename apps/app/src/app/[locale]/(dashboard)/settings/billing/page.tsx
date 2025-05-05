@@ -1,43 +1,112 @@
 "use client";
 
 import { getLocaleCurrency } from "@/utils/misc";
-import { Polar } from "@polar-sh/sdk";
 import { api } from "@v1/backend/convex/_generated/api";
 import { CURRENCIES, PLANS } from "@v1/backend/convex/constants";
 import { Button } from "@v1/ui/button";
 import { Switch } from "@v1/ui/switch";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { Doc } from "@v1/backend/convex/_generated/dataModel";
-import type { FunctionReturnType } from "convex/server";
+import { Loader2 } from "lucide-react";
 
 export default function BillingSettings() {
   const user = useQuery(api.users.functions.getUser);
-  const getUpgradeCheckoutUrl = useAction(
-    api.subscriptions.functions.getProOnboardingCheckoutUrl,
-  );
-  const plans = useQuery(api.subscriptions.functions.listPlans);
-
+  const organization = useQuery(api.organizations.functions.getUserOrganization);
+  const createCheckout = useMutation(api.organizations.subscription.createOrganizationCheckout);
+  
   const [selectedPlanInterval, setSelectedPlanInterval] = useState<
     "month" | "year"
   >("month");
+  const [loading, setLoading] = useState(false);
 
   const currency = getLocaleCurrency();
 
-  const freePlan = plans?.find((plan: Doc<"plans">) => plan.key === PLANS.FREE);
-  const proPlan = plans?.find((plan: Doc<"plans">) => plan.key === PLANS.PRO);
-
-  const handleUpgradeCheckout = async () => {
-    const url = await getUpgradeCheckoutUrl({ interval: selectedPlanInterval });
-    if (!url) {
-      return;
+  const handleUpgradeCheckout = async (planId: string) => {
+    if (!organization?._id) return;
+    
+    setLoading(true);
+    try {
+      const result = await createCheckout({
+        organizationId: organization._id,
+        planId,
+        successUrl: window.location.href,
+      });
+      
+      if (result?.url) {
+        window.location.href = result.url;
+      }
+    } catch (error) {
+      console.error("Error creating checkout:", error);
+    } finally {
+      setLoading(false);
     }
-    window.location.href = url;
   };
 
-  if (!user || !plans) {
-    return null;
+  if (!user || !organization) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
   }
+
+  const currentPlan = organization.subscriptionPlan || "free";
+  const isOnFreePlan = currentPlan === "free";
+
+  // Plan data - replaced with direct definitions rather than DB lookups
+  const plans = [
+    {
+      key: "free",
+      name: "Free",
+      description: "Basic features for getting started",
+      prices: {
+        month: {
+          usd: { amount: 0 },
+          eur: { amount: 0 }
+        }
+      }
+    },
+    {
+      key: "pro",
+      name: "Pro",
+      description: "Advanced features for professionals",
+      prices: {
+        month: {
+          usd: { amount: 2900 },
+          eur: { amount: 2900 }
+        },
+        year: {
+          usd: { amount: 29000 },
+          eur: { amount: 29000 }
+        }
+      }
+    },
+    {
+      key: "enterprise",
+      name: "Enterprise",
+      description: "Premium features for teams",
+      prices: {
+        month: {
+          usd: { amount: 9900 },
+          eur: { amount: 9900 }
+        },
+        year: {
+          usd: { amount: 99000 },
+          eur: { amount: 99000 }
+        }
+      }
+    }
+  ];
+
+  const freePlan = plans.find(p => p.key === "free");
+  const proPlan = plans.find(p => p.key === "pro");
+  
+  // Map plan keys to Polar product IDs
+  const planIdMap: Record<string, string> = {
+    free: "free_plan_id",
+    pro: selectedPlanInterval === "month" ? "pro_monthly_plan_id" : "pro_yearly_plan_id",
+    enterprise: selectedPlanInterval === "month" ? "enterprise_monthly_plan_id" : "enterprise_yearly_plan_id"
+  };
 
   return (
     <div className="flex h-full w-full flex-col gap-6">
@@ -46,18 +115,39 @@ export default function BillingSettings() {
           This is a demo app.
         </h2>
         <p className="text-sm font-normal text-primary/60">
-          Convex SaaS is a demo app that uses Stripe test environment. You can
+          Convex SaaS is a demo app that uses Polar test environment. You can
           find a list of test card numbers on the{" "}
           <a
-            href="https://stripe.com/docs/testing#cards"
+            href="https://docs.polar.sh/testing"
             target="_blank"
             rel="noreferrer"
             className="font-medium text-primary/80 underline"
           >
-            Stripe docs
+            Polar docs
           </a>
           .
         </p>
+      </div>
+
+      {/* Organization Info */}
+      <div className="flex w-full flex-col items-start rounded-lg border border-border bg-card">
+        <div className="flex flex-col gap-2 p-6">
+          <h2 className="text-xl font-medium text-primary">Organization</h2>
+          <p className="flex items-start gap-1 text-sm font-normal text-primary/60">
+            {organization.name} • Subscription:{" "}
+            <span className="flex h-[18px] items-center rounded-md bg-primary/10 px-1.5 text-sm font-medium text-primary/80">
+              {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}
+            </span>
+            • Status:{" "}
+            <span className={`flex h-[18px] items-center rounded-md px-1.5 text-sm font-medium ${
+              organization.subscriptionStatus === "active" 
+                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" 
+                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+            }`}>
+              {organization.subscriptionStatus}
+            </span>
+          </p>
+        </div>
       </div>
 
       {/* Plans */}
@@ -65,145 +155,118 @@ export default function BillingSettings() {
         <div className="flex flex-col gap-2 p-6">
           <h2 className="text-xl font-medium text-primary">Plan</h2>
           <p className="flex items-start gap-1 text-sm font-normal text-primary/60">
-            You are currently on the{" "}
-            <span className="flex h-[18px] items-center rounded-md bg-primary/10 px-1.5 text-sm font-medium text-primary/80">
-              {user.plan?.key
-                ? user.plan?.key.charAt(0).toUpperCase() +
-                  user.plan?.key.slice(1)
-                : "Free"}
-            </span>
-            plan.
+            Choose the plan that works best for your team.
           </p>
         </div>
 
-        {user.subscription?.planId === freePlan?._id && (
-          <div className="flex w-full flex-col items-center justify-evenly gap-2 border-border p-6 pt-0">
-            {plans.map((plan: Doc<"plans">) => (
-              <div
-                key={plan._id}
-                className={`flex w-full select-none items-center rounded-md border border-border ${
-                  user.subscription?.planId === plan._id && "border-primary/60"
-                }`}
-              >
-                <div className="flex w-full flex-col items-start p-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-medium text-primary">
-                      {plan.name}
-                    </span>
-                    {plan._id !== freePlan?._id && (
-                      <span className="flex items-center rounded-md bg-primary/10 px-1.5 text-sm font-medium text-primary/80">
-                        {currency === CURRENCIES.USD ? "$" : "€"}{" "}
-                        {/* TODO: remove assertions */}
-                        {selectedPlanInterval === "month"
-                          ? (plan.prices.month?.[currency]?.amount ?? 0) / 100
-                          : (plan.prices.year?.[currency]?.amount ?? 0) /
-                            100}{" "}
-                        / {selectedPlanInterval === "month" ? "month" : "year"}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-start text-sm font-normal text-primary/60">
-                    {plan.description}
-                  </p>
-                </div>
-
-                {/* Billing Switch */}
-                {plan._id !== freePlan?._id && (
-                  <div className="flex items-center gap-2 px-4">
-                    <label
-                      htmlFor="interval-switch"
-                      className="text-start text-sm text-primary/60"
-                    >
-                      {selectedPlanInterval === "month" ? "Monthly" : "Yearly"}
-                    </label>
-                    <Switch
-                      id="interval-switch"
-                      checked={selectedPlanInterval === "year"}
-                      onCheckedChange={() =>
-                        setSelectedPlanInterval((prev) =>
-                          prev === "month" ? "year" : "month",
-                        )
-                      }
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {user.subscription && user.subscription.planId === proPlan?._id && (
-          <div className="flex w-full flex-col items-center justify-evenly gap-2 border-border p-6 pt-0">
-            <div className="flex w-full items-center overflow-hidden rounded-md border border-primary/60">
+        <div className="flex w-full flex-col items-center justify-evenly gap-4 border-border p-6 pt-0">
+          {plans.map((plan) => (
+            <div
+              key={plan.key}
+              className={`flex w-full select-none items-center rounded-md border border-border ${
+                currentPlan === plan.key && "border-primary/60"
+              }`}
+            >
               <div className="flex w-full flex-col items-start p-4">
-                <div className="flex items-end gap-2">
+                <div className="flex items-center gap-2">
                   <span className="text-base font-medium text-primary">
-                    {proPlan?.name}
+                    {plan.name}
                   </span>
-                  <p className="flex items-start gap-1 text-sm font-normal text-primary/60">
-                    {user.subscription.cancelAtPeriodEnd === true ? (
-                      <span className="flex h-[18px] items-center text-sm font-medium text-red-500">
-                        Expires
-                      </span>
-                    ) : (
-                      <span className="flex h-[18px] items-center text-sm font-medium text-green-500">
-                        Renews
-                      </span>
-                    )}
-                    on:{" "}
-                    {new Date(
-                      user.subscription.currentPeriodEnd ?? 0 * 1000,
-                    ).toLocaleDateString("en-US")}
-                    .
-                  </p>
+                  {plan.key !== "free" && (
+                    <span className="flex items-center rounded-md bg-primary/10 px-1.5 text-sm font-medium text-primary/80">
+                      {currency === CURRENCIES.USD ? "$" : "€"}{" "}
+                      {/* Get price safely with defaults */}
+                      {selectedPlanInterval === "month"
+                        ? ((plan.prices?.month && plan.prices.month[currency]?.amount) ?? 0) / 100
+                        : ((plan.prices?.year && plan.prices.year[currency]?.amount) ?? 0) / 100}{" "}
+                      / {selectedPlanInterval === "month" ? "month" : "year"}
+                    </span>
+                  )}
                 </div>
                 <p className="text-start text-sm font-normal text-primary/60">
-                  {proPlan?.description}
+                  {plan.description}
                 </p>
               </div>
+
+              {/* Billing Switch */}
+              {plan.key !== "free" && (
+                <div className="flex items-center gap-2 px-4">
+                  <label
+                    htmlFor={`interval-switch-${plan.key}`}
+                    className="text-start text-sm text-primary/60"
+                  >
+                    {selectedPlanInterval === "month" ? "Monthly" : "Yearly"}
+                  </label>
+                  <Switch
+                    id={`interval-switch-${plan.key}`}
+                    checked={selectedPlanInterval === "year"}
+                    onCheckedChange={() =>
+                      setSelectedPlanInterval((prev) =>
+                        prev === "month" ? "year" : "month",
+                      )
+                    }
+                  />
+                </div>
+              )}
+
+              {/* Action Button */}
+              <div className="px-4">
+                {currentPlan === plan.key ? (
+                  <Button disabled variant="outline" size="sm">
+                    Current Plan
+                  </Button>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    variant={plan.key === "free" ? "outline" : "default"}
+                    onClick={() => handleUpgradeCheckout(planIdMap[plan.key as keyof typeof planIdMap])}
+                    disabled={loading}
+                  >
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {plan.key === "free" ? "Downgrade" : "Upgrade"}
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
 
         <div className="flex min-h-14 w-full items-center justify-between rounded-lg rounded-t-none border-t border-border bg-secondary px-6 py-3 dark:bg-card">
           <p className="text-sm font-normal text-primary/60">
             You will not be charged for testing the subscription upgrade.
           </p>
-          {user.subscription?.planId === freePlan?._id && (
-            <Button type="submit" size="sm" onClick={handleUpgradeCheckout}>
-              Upgrade to PRO
-            </Button>
-          )}
         </div>
       </div>
 
       {/* Manage Subscription */}
-      <div className="flex w-full flex-col items-start rounded-lg border border-border bg-card">
-        <div className="flex flex-col gap-2 p-6">
-          <h2 className="text-xl font-medium text-primary">
-            Manage Subscription
-          </h2>
-          <p className="flex items-start gap-1 text-sm font-normal text-primary/60">
-            Update your payment method, billing address, and more.
-          </p>
-        </div>
+      {organization.polarSubscriptionId && (
+        <div className="flex w-full flex-col items-start rounded-lg border border-border bg-card">
+          <div className="flex flex-col gap-2 p-6">
+            <h2 className="text-xl font-medium text-primary">
+              Manage Subscription
+            </h2>
+            <p className="flex items-start gap-1 text-sm font-normal text-primary/60">
+              Update your payment method, billing address, and more.
+            </p>
+          </div>
 
-        <div className="flex min-h-14 w-full items-center justify-between rounded-lg rounded-t-none border-t border-border bg-secondary px-6 py-3 dark:bg-card">
-          <p className="text-sm font-normal text-primary/60">
-            You will be redirected to the Stripe Customer Portal.
-          </p>
+          <div className="flex min-h-14 w-full items-center justify-between rounded-lg rounded-t-none border-t border-border bg-secondary px-6 py-3 dark:bg-card">
+            <p className="text-sm font-normal text-primary/60">
+              You will be redirected to the Polar Customer Portal.
+            </p>
 
-          <a
-            href={`https://sandbox.polar.sh/purchases/subscriptions/${user.subscription?.polarId}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Button type="submit" size="sm">
-              Manage
-            </Button>
-          </a>
+            <a
+              href={`https://sandbox.polar.sh/purchases/subscriptions/${organization.polarSubscriptionId}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button size="sm">
+                Manage
+              </Button>
+            </a>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

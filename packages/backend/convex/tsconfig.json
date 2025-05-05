@@ -33,6 +33,6 @@
     "./**/*"
   ],
   "exclude": [
-    "./_generated"
+    // "./_generated"
   ]
 }

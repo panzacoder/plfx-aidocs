@@ -11,12 +11,12 @@ export const getFirstOrganization = query({
       return null;
     }
 
-    const userId = identity.subject;
+    const userId = identity.subject as Id<"users">;
     
     // First check if user is the owner of any organization
     const ownedOrg = await ctx.db
       .query("organizations")
-      .withIndex("by_ownerId", (q) => q.eq("ownerId", userId as Id<"users">))
+      .withIndex("ownerId", (q) => q.eq("ownerId", userId ))
       .first();
     
     if (ownedOrg) {
@@ -26,7 +26,7 @@ export const getFirstOrganization = query({
     // Then check if user is a member of any organization
     const orgs = await ctx.db.query("organizations").collect();
     for (const org of orgs) {
-      if (org.members.includes(userId as Id<"users">)) {
+      if (org.members.includes(userId)) {
         return org._id;
       }
     }

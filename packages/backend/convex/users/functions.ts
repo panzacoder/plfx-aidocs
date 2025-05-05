@@ -1,8 +1,9 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { asyncMap } from "convex-helpers";
 import { v } from "convex/values";
-import { mutation, query } from "@/_generated/server";
+import { mutation, query, action } from "@/_generated/server";
 import { username } from "@/utils/validators";
+import { api, internal } from "@/_generated/api";
 
 export const getUser = query({
   handler: async (ctx) => {
@@ -10,26 +11,35 @@ export const getUser = query({
     if (!userId) {
       return;
     }
+    
     const user = await ctx.db.get(userId);
     if (!user) {
       return;
     }
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("userId", (q) => q.eq("userId", userId))
-      .unique();
-    const plan = subscription?.planId
-      ? await ctx.db.get(subscription.planId)
-      : undefined;
+    
+    // Get organization data if user belongs to one
+    let organization = null;
+    if (user.organizationId) {
+      organization = await ctx.db.get(user.organizationId);
+    }
+    
     return {
       ...user,
       name: user.username || user.name,
-      subscription,
-      plan,
+      organization,
       avatarUrl: user.imageId
         ? await ctx.storage.getUrl(user.imageId)
         : undefined,
     };
+  },
+});
+
+export const get = query({
+  args: {
+    id: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });
 
@@ -86,33 +96,71 @@ export const removeUserImage = mutation({
   },
 });
 
-export const deleteCurrentUserAccount = mutation({
+export const deleteCurrentUserAccount = action({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       return;
     }
-    const user = await ctx.db.get(userId);
+    
+    const user = await ctx.runQuery(api.users.functions.getUser);
     if (!user) {
       throw new Error("User not found");
     }
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("userId", (q) => q.eq("userId", userId))
-      .unique();
-    if (!subscription) {
-      console.error("No subscription found");
-    } else {
-      await ctx.db.delete(subscription._id);
+    
+    // Get user's organization
+    if (user.organization?._id) {
+      // Cancel the organization's subscription if it exists
+      if (user.organization.polarSubscriptionId) {
+        await ctx.runAction(api.organizations.subscription.cancelOrganizationSubscription, {
+          organizationId: user.organization._id
+        });
+      }
+      
+      // If user is the owner, delete the organization
+      if (user.organization.ownerId === userId) {
+        // Consider what to do with other members of the organization
+        // For now, just delete the organization
+        await ctx.runMutation(internal.organizations.internal.deleteOrganization, {
+          id: user.organization._id
+        });
+      } else {
+        // If not the owner, just remove the user from the members list
+        await ctx.runMutation(api.organizations.functions.removeMember, {
+          organizationId: user.organization._id,
+          userId
+        });
+      }
     }
+    
+    // Delete auth accounts
+    await ctx.runMutation(internal.users.functions.deleteUserAuthAccounts, {
+      userId
+    });
+    
+    // Finally delete the user
+    await ctx.runMutation(internal.users.functions.deleteUser, {
+      userId
+    });
+    
+    return true;
+  },
+});
+
+// Internal mutation to delete a user's auth accounts
+export const deleteUserAuthAccounts = mutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
     await asyncMap(
       ["google" /* add other providers as needed */],
       async (provider) => {
         const authAccount = await ctx.db
           .query("authAccounts")
           .withIndex("userIdAndProvider", (q) =>
-            q.eq("userId", userId).eq("provider", provider),
+            q.eq("userId", args.userId).eq("provider", provider),
           )
           .unique();
         if (!authAccount) {
@@ -121,6 +169,15 @@ export const deleteCurrentUserAccount = mutation({
         await ctx.db.delete(authAccount._id);
       },
     );
-    await ctx.db.delete(userId);
+  },
+});
+
+// Internal mutation to delete a user
+export const deleteUser = mutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.userId);
   },
 });

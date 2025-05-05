@@ -14,8 +14,10 @@ export const users = {
 
   username: z.string().optional(),
   imageId: zid("_storage").optional(),
-  polarId: z.string().optional(),
-  polarSubscriptionPendingId: zid("_scheduled_functions").optional(),
+  
+  // Organization membership
+  organizationId: zid("organizations").optional(),
+  role: z.enum(["owner", "admin", "member"]).optional(),
 };
 export const zUsers = z.object(users);
 
