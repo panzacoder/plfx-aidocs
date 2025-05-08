@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@v1/backend/convex/_generated/api";
 import { Id } from "@v1/backend/convex/_generated/dataModel";
-import { AssistantForm } from "../../../_components/assistants/assistant-form";
+import { AssistantForm } from "@/app/[locale]/(dashboard)/_components/assistants/assistant-form";
 import { Skeleton } from "@v1/ui/skeleton";
 import { Card, CardContent } from "@v1/ui/card";
 import { AlertCircle } from "lucide-react";

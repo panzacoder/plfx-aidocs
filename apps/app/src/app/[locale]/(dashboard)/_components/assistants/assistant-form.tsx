@@ -42,11 +42,21 @@ const formSchema = z.object({
   initialPrompt: z.string().optional(),
   disclaimer: z.string().optional(),
   mode: z.enum(["open", "restricted"]),
-  restrictedResponse: z.string().optional().or(z.string().min(1, {
-    message: "Restricted response is required when restricted mode is enabled",
-  })),
+  restrictedResponse: z.string().optional(),
   tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])),
-});
+}).refine(
+  (data) => {
+    // If mode is restricted, restrictedResponse is required
+    if (data.mode === "restricted") {
+      return !!data.restrictedResponse;
+    }
+    return true;
+  },
+  {
+    message: "Restricted response is required when restricted mode is enabled",
+    path: ["restrictedResponse"],
+  }
+);
 
 interface AssistantFormProps {
   organizationId: Id<"organizations">;
@@ -67,6 +77,7 @@ interface AssistantFormProps {
 export function AssistantForm({ organizationId, assistant }: AssistantFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createAssistant = useMutation(api.assistants.functions.createAssistant);
   const updateAssistant = useMutation(api.assistants.functions.updateAssistant);
@@ -103,7 +114,19 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
+    setError(null);
+    
     try {
+      // Ensure there's at least one tool selected
+      if (values.tools.length === 0) {
+        form.setError("tools", {
+          type: "manual",
+          message: "Select at least one tool for your assistant",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       if (isEdit && assistant) {
         await updateAssistant({
           assistantId: assistant._id,
@@ -128,11 +151,16 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
         // Navigate to the assistant page
         router.push(`/assistants/${result._id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating/updating assistant:", error);
+      
+      // Extract error message for display
+      const errorMessage = error.message || `Failed to ${isEdit ? "update" : "create"} assistant`;
+      setError(errorMessage);
+      
       toast({
         title: "Error",
-        description: `Failed to ${isEdit ? "update" : "create"} assistant. Please try again.`,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -160,6 +188,13 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {error && (
+          <div className="mb-6 rounded-md bg-destructive/10 p-4 text-destructive">
+            <p className="font-medium">Error</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -274,6 +309,17 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
                                   const updatedTools = checked
                                     ? [...field.value, "retrieval"]
                                     : field.value.filter((tool) => tool !== "retrieval");
+                                  
+                                  // Ensure we always have at least one tool
+                                  if (updatedTools.length === 0) {
+                                    form.setError("tools", {
+                                      type: "manual",
+                                      message: "Select at least one tool for your assistant",
+                                    });
+                                  } else {
+                                    form.clearErrors("tools");
+                                  }
+                                  
                                   field.onChange(updatedTools);
                                 }}
                               />
@@ -301,6 +347,17 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
                                   const updatedTools = checked
                                     ? [...field.value, "code_interpreter"]
                                     : field.value.filter((tool) => tool !== "code_interpreter");
+                                  
+                                  // Ensure we always have at least one tool
+                                  if (updatedTools.length === 0) {
+                                    form.setError("tools", {
+                                      type: "manual",
+                                      message: "Select at least one tool for your assistant",
+                                    });
+                                  } else {
+                                    form.clearErrors("tools");
+                                  }
+                                  
                                   field.onChange(updatedTools);
                                 }}
                               />

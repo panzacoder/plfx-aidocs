@@ -23,7 +23,19 @@ export const createAssistantSchema = z.object({
   tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])).default(["retrieval"]),
   fileIds: z.array(z.string()).default([]),
   metadata: z.record(z.string(), z.string()).optional(),
-});
+}).refine(
+  (data) => {
+    // If mode is restricted, restrictedResponse is required
+    if (data.mode === "restricted") {
+      return !!data.restrictedResponse;
+    }
+    return true;
+  },
+  {
+    message: "Restricted response is required when restricted mode is enabled",
+    path: ["restrictedResponse"],
+  }
+);
 
 export const listAssistantsSchema = z.object({
   organizationId: zid("organizations"),
@@ -47,7 +59,19 @@ export const updateAssistantSchema = z.object({
   fileIds: z.array(z.string()).optional(),
   metadata: z.record(z.string(), z.string()).optional(),
   status: z.enum(["creating", "ready", "failed"]).optional(),
-});
+}).refine(
+  (data) => {
+    // If mode is restricted, restrictedResponse should be defined
+    if (data.mode === "restricted" && data.restrictedResponse === "") {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: "Restricted response is required when restricted mode is enabled",
+    path: ["restrictedResponse"],
+  }
+);
 
 export const deleteAssistantSchema = z.object({
   assistantId: zid("assistants"),

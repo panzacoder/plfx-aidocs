@@ -3,6 +3,7 @@ import { Table } from "convex-helpers/server";
 import { z } from "zod";
 import { Doc } from "@/_generated/dataModel";
 
+// Schema definition for the assistants table
 export const assistants = {
   organizationId: zid("organizations"),
   aiProviderId: zid("aiProviders").optional(),
@@ -21,7 +22,7 @@ export const assistants = {
   status: z.enum(["creating", "ready", "failed"]),
   lastSynced: z.number().optional(),
 };
-export const zAssistants = z.object(assistants);
 
+// Export the table schema for use in schema.ts
 export const Assistants = Table("assistants", zodToConvexFields(assistants));
 export type AssistantDoc = Doc<"assistants">;

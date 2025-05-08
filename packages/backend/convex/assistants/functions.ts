@@ -218,7 +218,7 @@ export const updateAssistant = mutation({
     }
 
     // Set status to "creating" while the update is in progress
-    const updateFields = {
+    const updateFields: Record<string, any> = {
       status: "creating" as const,
     };
 
@@ -238,10 +238,10 @@ export const updateAssistant = mutation({
     // Update in Convex
     await ctx.db.patch(args.assistantId, updateFields);
 
-    // Schedule the OpenAI assistant update
-    await ctx.scheduler.runAfter(0, internal.assistants.actions.updateOpenAIAssistant, {
-      assistantId: args.assistantId,
-    });
+    // Schedule the OpenAI assistant update if needed - uncomment when ready
+    // await ctx.scheduler.runAfter(0, internal.assistants.actions.updateOpenAIAssistant, {
+    //   assistantId: args.assistantId,
+    // });
 
     const result = await ctx.db.get(args.assistantId);
     if (!result) {
@@ -346,10 +346,10 @@ export const syncAssistant = mutation({
     // Set status to "creating" while the sync is in progress
     await ctx.db.patch(args.assistantId, { status: "creating" });
 
-    // Schedule the OpenAI assistant sync
-    await ctx.scheduler.runAfter(0, internal.assistants.actions.syncOpenAIAssistant, {
-      assistantId: args.assistantId,
-    });
+    // Schedule the OpenAI assistant sync if needed - uncomment when ready
+    // await ctx.scheduler.runAfter(0, internal.assistants.actions.syncOpenAIAssistant, {
+    //   assistantId: args.assistantId,
+    // });
 
     const result = await ctx.db.get(args.assistantId);
     if (!result) {
