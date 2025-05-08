@@ -44,6 +44,7 @@ const formSchema = z.object({
   mode: z.enum(["open", "restricted"]),
   restrictedResponse: z.string().optional(),
   tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])),
+  externalId: z.string().optional(),
 }).refine(
   (data) => {
     // If mode is restricted, restrictedResponse is required
@@ -138,9 +139,13 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
           description: "Your assistant has been updated successfully.",
         });
       } else {
+        // Generate a random externalId if one is not provided
+        const externalId = values.externalId || `local-${Math.random().toString(36).substring(2, 15)}`;
+        
         const result = await createAssistant({
           organizationId,
           ...values,
+          externalId,
         });
 
         toast({

@@ -23,6 +23,7 @@ export const createAssistantSchema = z.object({
   tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])).default(["retrieval"]),
   fileIds: z.array(z.string()).default([]),
   metadata: z.record(z.string(), z.string()).optional(),
+  externalId: z.string().optional(),
 }).refine(
   (data) => {
     // If mode is restricted, restrictedResponse is required

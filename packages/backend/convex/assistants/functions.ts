@@ -78,7 +78,7 @@ export const createAssistant = mutation({
       tools: args.tools || ["retrieval"],
       metadata: args.metadata,
       status: "ready", // Mark as ready since we're not using OpenAI
-      externalId: "local-" + Math.random().toString(36).substring(2, 15), // Create a fake ID
+      externalId: args.externalId || "local-" + Math.random().toString(36).substring(2, 15), // Use provided externalId or create a fake ID
     });
 
     // For now, we're not scheduling OpenAI assistant creation
