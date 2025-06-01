@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(pnpm test:*)",
+      "Bash(find:*)",
+      "Bash(npm test)",
+      "Bash(npm run build:*)",
+      "Bash(npm run:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": false
+}

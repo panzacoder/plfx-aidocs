@@ -1,29 +1,37 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
-import { Id } from "../_generated/dataModel";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const getFirstOrganization = query({
   args: {},
   returns: v.union(v.id("organizations"), v.null()),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       return null;
     }
-
-    const userId = identity.subject as Id<"users">;
     
-    // First check if user is the owner of any organization
+    // First, get the user and check their organizationId field
+    const user = await ctx.db.get(userId);
+    if (user?.organizationId) {
+      // Verify the organization still exists
+      const org = await ctx.db.get(user.organizationId);
+      if (org) {
+        return org._id;
+      }
+    }
+    
+    // Fallback: Check if user is the owner of any organization
     const ownedOrg = await ctx.db
       .query("organizations")
-      .withIndex("ownerId", (q) => q.eq("ownerId", userId ))
+      .withIndex("ownerId", (q) => q.eq("ownerId", userId))
       .first();
     
     if (ownedOrg) {
       return ownedOrg._id;
     }
     
-    // Then check if user is a member of any organization
+    // Final fallback: Check if user is a member of any organization
     const orgs = await ctx.db.query("organizations").collect();
     for (const org of orgs) {
       if (org.members.includes(userId)) {

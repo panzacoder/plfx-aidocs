@@ -44,7 +44,7 @@ const formSchema = z.object({
   mode: z.enum(["open", "restricted"]),
   restrictedResponse: z.string().optional(),
   tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])),
-  externalId: z.string().optional(),
+  agentEnabled: z.boolean().default(true),
 }).refine(
   (data) => {
     // If mode is restricted, restrictedResponse is required
@@ -72,6 +72,7 @@ interface AssistantFormProps {
     mode: "open" | "restricted";
     restrictedResponse?: string;
     tools: string[];
+    agentEnabled?: boolean;
   };
 }
 
@@ -98,6 +99,7 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
       mode: assistant.mode,
       restrictedResponse: assistant.restrictedResponse || "",
       tools: assistant.tools as any[],
+      agentEnabled: assistant.agentEnabled !== false,
     } : {
       name: "",
       model: "gpt-4-turbo-preview",
@@ -108,10 +110,12 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
       mode: "open",
       restrictedResponse: "",
       tools: ["retrieval"],
+      agentEnabled: true,
     },
   });
 
   const mode = form.watch("mode");
+  const agentEnabled = form.watch("agentEnabled");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -139,13 +143,10 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
           description: "Your assistant has been updated successfully.",
         });
       } else {
-        // Generate a random externalId if one is not provided
-        const externalId = values.externalId || `local-${Math.random().toString(36).substring(2, 15)}`;
-        
+        // Create the assistant without externalId (AI Agent handles this)
         const result = await createAssistant({
           organizationId,
           ...values,
-          externalId,
         });
 
         toast({
@@ -428,6 +429,28 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
                 )}
               />
             )}
+
+            <FormField
+              control={form.control}
+              name="agentEnabled"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>AI Agent</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <span>{field.value ? "Enabled" : "Disabled"}</span>
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Use the enhanced AI Agent for improved conversation capabilities and streaming responses
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

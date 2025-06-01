@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query } from "@/_generated/server";
+import type { Id } from "../_generated/dataModel";
 
 const aiProviderValidator = v.object({
   _id: v.id("aiProviders"),
@@ -9,6 +10,28 @@ const aiProviderValidator = v.object({
   type: v.literal("OpenAI"),
   apiKey: v.string(),
 });
+
+/**
+ * Helper function to validate that a user has access to an organization
+ */
+async function validateOrganizationAccess(
+  ctx: any,
+  userId: Id<"users">,
+  organizationId: Id<"organizations">
+) {
+  const organization = await ctx.db.get(organizationId);
+  if (!organization) {
+    throw new Error("Organization not found");
+  }
+
+  // Check if user has access to the organization (owner or member)
+  if (organization.ownerId.toString() !== userId.toString() && 
+      !organization.members.includes(userId)) {
+    throw new Error("Access denied to this organization");
+  }
+
+  return organization;
+}
 
 // Create a new AI provider
 export const createAIProvider = mutation({
@@ -23,7 +46,8 @@ export const createAIProvider = mutation({
       throw new Error("Not authenticated");
     }
 
-    // TODO: Add organization membership check here
+    // Validate user has access to the organization
+    await validateOrganizationAccess(ctx, userId, args.organizationId);
 
     const aiProvider = await ctx.db.insert("aiProviders", {
       organizationId: args.organizationId,
@@ -52,7 +76,8 @@ export const listAIProviders = query({
       throw new Error("Not authenticated");
     }
 
-    // TODO: Add organization membership check here
+    // Validate user has access to the organization
+    await validateOrganizationAccess(ctx, userId, args.organizationId);
 
     const providers = await ctx.db
       .query("aiProviders")
@@ -82,7 +107,8 @@ export const getAIProvider = query({
       return null;
     }
 
-    // TODO: Add organization membership check here
+    // Validate user has access to the provider's organization
+    await validateOrganizationAccess(ctx, userId, provider.organizationId);
 
     return provider;
   },
@@ -106,7 +132,8 @@ export const updateAIProvider = mutation({
       throw new Error("AI Provider not found");
     }
 
-    // TODO: Add organization membership check here
+    // Validate user has access to the provider's organization
+    await validateOrganizationAccess(ctx, userId, provider.organizationId);
 
     await ctx.db.patch(args.providerId, {
       apiKey: args.apiKey,
@@ -138,7 +165,8 @@ export const deleteAIProvider = mutation({
       throw new Error("AI Provider not found");
     }
 
-    // TODO: Add organization membership check here
+    // Validate user has access to the provider's organization
+    await validateOrganizationAccess(ctx, userId, provider.organizationId);
 
     // Check if there are any assistants using this provider
     const assistants = await ctx.db

@@ -12,6 +12,7 @@ export const env = createEnv({
     SITE_URL: z.string().url(),
     AUTH_GOOGLE_ID: z.string().min(1),
     AUTH_GOOGLE_SECRET: z.string().min(1),
+    OPENAI_API_KEY: z.string().min(1),
   },
   runtimeEnv: {
     CONVEX_SITE_URL: process.env.CONVEX_SITE_URL,
@@ -23,6 +24,7 @@ export const env = createEnv({
     SITE_URL: process.env.SITE_URL,
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   },
   skipValidation: !process.env.VALIDATE_ENV,
 });

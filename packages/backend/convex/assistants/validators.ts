@@ -24,6 +24,7 @@ export const createAssistantSchema = z.object({
   fileIds: z.array(z.string()).default([]),
   metadata: z.record(z.string(), z.string()).optional(),
   externalId: z.string().optional(),
+  agentEnabled: z.boolean().optional().default(true),
 }).refine(
   (data) => {
     // If mode is restricted, restrictedResponse is required

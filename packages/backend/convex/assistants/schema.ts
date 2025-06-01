@@ -21,6 +21,7 @@ export const assistants = {
   metadata: z.record(z.string(), z.string()).optional(),
   status: z.enum(["creating", "ready", "failed"]),
   lastSynced: z.number().optional(),
+  agentEnabled: z.boolean().optional(),
 };
 
 // Export the table schema for use in schema.ts

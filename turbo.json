@@ -24,7 +24,25 @@
       "cache": false
     },
     "test": {
-      "cache": false
+      "cache": false,
+      "dependsOn": ["^build"]
+    },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:coverage": {
+      "cache": false,
+      "outputs": ["coverage/**"],
+      "dependsOn": ["^build"]
+    },
+    "test:ui": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:e2e": {
+      "cache": false,
+      "dependsOn": ["^build"]
     },
     "clean": {
       "cache": false

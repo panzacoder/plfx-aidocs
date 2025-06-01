@@ -9,6 +9,11 @@
     "lint": "biome lint",
     "format": "biome format --write .",
     "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -36,6 +41,7 @@
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.56.1",
     "remeda": "^2.14.0",
+    "tailwind-merge": "^2.6.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {

@@ -77,8 +77,11 @@ export const createAssistant = mutation({
       fileIds: args.fileIds || [],
       tools: args.tools || ["retrieval"],
       metadata: args.metadata,
-      status: "ready", // Mark as ready since we're not using OpenAI
-      externalId: args.externalId || "local-" + Math.random().toString(36).substring(2, 15), // Use provided externalId or create a fake ID
+      status: "ready", // Mark as ready since we're using AI Agent
+      // Use a consistent identifier for agent-managed assistants
+      externalId: args.agentEnabled ? "agent-managed" : (args.externalId || "legacy-" + Math.random().toString(36).substring(2, 15)),
+      // Store whether this assistant uses the AI Agent implementation
+      agentEnabled: args.agentEnabled ?? true,
     });
 
     // For now, we're not scheduling OpenAI assistant creation
