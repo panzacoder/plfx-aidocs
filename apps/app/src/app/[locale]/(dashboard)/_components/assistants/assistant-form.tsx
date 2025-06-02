@@ -36,7 +36,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 // Define form schema
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
-  model: z.enum(["gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]),
+  model: z.enum(["gpt-4o", "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]),
   instructions: z.string().optional(),
   description: z.string().optional(),
   initialPrompt: z.string().optional(),
@@ -44,7 +44,6 @@ const formSchema = z.object({
   mode: z.enum(["open", "restricted"]),
   restrictedResponse: z.string().optional(),
   tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])),
-  agentEnabled: z.boolean().default(true),
 }).refine(
   (data) => {
     // If mode is restricted, restrictedResponse is required
@@ -64,7 +63,7 @@ interface AssistantFormProps {
   assistant?: {
     _id: Id<"assistants">;
     name?: string;
-    model: "gpt-4-turbo-preview" | "gpt-4" | "gpt-3.5-turbo";
+    model: "gpt-4o" | "gpt-4-turbo-preview" | "gpt-4" | "gpt-3.5-turbo";
     instructions?: string;
     description?: string;
     initialPrompt?: string;
@@ -72,7 +71,6 @@ interface AssistantFormProps {
     mode: "open" | "restricted";
     restrictedResponse?: string;
     tools: string[];
-    agentEnabled?: boolean;
   };
 }
 
@@ -99,10 +97,9 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
       mode: assistant.mode,
       restrictedResponse: assistant.restrictedResponse || "",
       tools: assistant.tools as any[],
-      agentEnabled: assistant.agentEnabled !== false,
     } : {
       name: "",
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4o",
       instructions: "",
       description: "",
       initialPrompt: "",
@@ -110,12 +107,10 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
       mode: "open",
       restrictedResponse: "",
       tools: ["retrieval"],
-      agentEnabled: true,
     },
   });
 
   const mode = form.watch("mode");
-  const agentEnabled = form.watch("agentEnabled");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -236,7 +231,8 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="gpt-4-turbo-preview">GPT-4 Turbo (Recommended)</SelectItem>
+                      <SelectItem value="gpt-4o">GPT-4o (Recommended)</SelectItem>
+                      <SelectItem value="gpt-4-turbo-preview">GPT-4 Turbo</SelectItem>
                       <SelectItem value="gpt-4">GPT-4</SelectItem>
                       <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
                     </SelectContent>
@@ -430,27 +426,7 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
               />
             )}
 
-            <FormField
-              control={form.control}
-              name="agentEnabled"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>AI Agent</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                      <span>{field.value ? "Enabled" : "Disabled"}</span>
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Use the enhanced AI Agent for improved conversation capabilities and streaming responses
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
+            {/* All assistants now use the Convex Agent */}
 
             <FormField
               control={form.control}

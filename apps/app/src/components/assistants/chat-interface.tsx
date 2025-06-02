@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Id } from "@v1/backend/convex/_generated/dataModel";
 import { useAssistantThread, type Message } from "@/hooks/useAssistantThread";
+import { useSmoothText } from "@/hooks/useSmoothText";
 import { Button } from "@v1/ui/button";
 import { Textarea } from "@v1/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@v1/ui/card";
@@ -15,7 +16,6 @@ export interface ChatInterfaceProps {
   initialThreadId?: string;
   disclaimer?: string;
   className?: string;
-  useAgent?: boolean;
 }
 
 export function ChatInterface({
@@ -24,7 +24,6 @@ export function ChatInterface({
   initialThreadId,
   disclaimer,
   className,
-  useAgent = true,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -37,11 +36,9 @@ export function ChatInterface({
     isStreaming,
     error,
     sendMessage,
-    loadMessages,
   } = useAssistantThread({
     assistantId,
     initialThreadId,
-    useAgent,
   });
 
   // Scroll to bottom when messages change
@@ -72,9 +69,14 @@ export function ChatInterface({
     }
   };
 
-  // Render chat message
+  // Render chat message with text smoothing
   const renderMessage = (message: Message) => {
     const isUser = message.role === "user";
+    
+    // Apply smooth text for streaming assistant messages
+    const content = isUser 
+      ? message.content 
+      : useSmoothText(message.content, message.isStreaming || false);
     
     return (
       <div 
@@ -111,7 +113,7 @@ export function ChatInterface({
             )}
           >
             <div className="prose prose-sm dark:prose-invert max-w-none">
-              <Markdown>{message.content}</Markdown>
+              <Markdown>{content}</Markdown>
               {message.isStreaming && (
                 <span className="inline-block w-1.5 h-4 ml-0.5 bg-current animate-pulse" />
               )}
