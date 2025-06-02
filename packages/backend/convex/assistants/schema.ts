@@ -7,13 +7,11 @@ import { Doc } from "@/_generated/dataModel";
 export const assistants = {
   organizationId: zid("organizations"),
   aiProviderId: zid("aiProviders").optional(),
-  externalId: z.string(),
   name: z.string().optional(),
   disclaimer: z.string().optional(),
   initialPrompt: z.string().optional(),
   mode: z.enum(["open", "restricted"]),
   restrictedResponse: z.string().optional(),
-  // Updated model enum to include gpt-4o
   model: z.enum(["gpt-4o", "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]),
   description: z.string().optional(),
   instructions: z.string().optional(),
@@ -21,11 +19,15 @@ export const assistants = {
   tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])),
   metadata: z.record(z.string(), z.string()).optional(),
   status: z.enum(["creating", "ready", "failed"]),
+  
+  // Store primary thread ID for this assistant
+  // This will be the main conversation thread for this assistant
+  primaryThreadId: z.string().optional(),
+  
+  // Legacy fields maintained for backward compatibility
+  // These will be deprecated in future updates
+  externalId: z.string().optional(),
   lastSynced: z.number().optional(),
-  // Add a field to store agent thread ID for reference
-  agentThreadId: z.string().optional(),
-  // Mark everything as using the agent now (removing optional)
-  usesAgent: z.boolean().default(true),
 };
 
 // Export the table schema for use in schema.ts

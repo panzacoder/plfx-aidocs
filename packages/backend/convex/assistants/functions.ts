@@ -78,12 +78,10 @@ export const createAssistant = mutation({
       tools: args.tools || ["retrieval"],
       metadata: args.metadata,
       status: "ready", // Mark as ready since we're using the Convex Agent
-      // Use a consistent identifier for agent-managed assistants
+      // Legacy fields for backward compatibility
       externalId: args.externalId || "convex-agent-" + Math.random().toString(36).substring(2, 15),
-      // All assistants now use the Convex Agent by default
-      usesAgent: args.usesAgent ?? true,
-      // Agent thread ID will be populated when the first thread is created
-      agentThreadId: args.agentThreadId,
+      // The primary thread ID will be set when the first thread is created
+      primaryThreadId: args.primaryThreadId,
     });
 
     // For now, we're not scheduling OpenAI assistant creation

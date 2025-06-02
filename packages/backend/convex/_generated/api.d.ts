@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as agents from "../agents.js";
 import type * as aiProviders_functions from "../aiProviders/functions.js";
 import type * as aiProviders_validators from "../aiProviders/validators.js";
 import type * as assistants_actions from "../assistants/actions.js";
@@ -62,6 +63,7 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  agents: typeof agents;
   "aiProviders/functions": typeof aiProviders_functions;
   "aiProviders/validators": typeof aiProviders_validators;
   "assistants/actions": typeof assistants_actions;

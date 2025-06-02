@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, action } from "../_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "../_generated/api";
-import { createConvexAgent } from "./agent";
+import { assistantAgent, createCustomAgent } from "../agents";
 
 /**
  * Create a new thread and generate an initial response
@@ -25,29 +25,25 @@ export const createThread = action({
       },
     );
     if (!assistant) throw new Error("Assistant not found");
-    
-    // All assistants now use the Agent by default
-    if (assistant.usesAgent === false) {
-      throw new Error("This assistant is not configured to use the Convex Agent.");
-    }
 
-    // Get API key from provider or environment
-    let apiKey = "";
+    // Determine which agent to use
+    let agent = assistantAgent;
+    
+    // If custom API key is needed, create a custom agent
     if (assistant.aiProviderId) {
       const provider = await ctx.runQuery(internal.aiProviders.getAIProvider, {
         providerId: assistant.aiProviderId,
       });
-      apiKey = provider?.apiKey || "";
+      if (provider?.apiKey) {
+        agent = createCustomAgent(
+          provider.apiKey,
+          assistant.model,
+          assistant.instructions
+        );
+      }
     }
 
-    // Create agent instance with appropriate config
-    const agent = createConvexAgent(
-      apiKey,
-      assistant.model,
-      assistant.instructions,
-    );
-
-    // Create thread
+    // Create thread with the agent
     const { threadId, thread } = await agent.createThread(ctx, {
       userId: userId.toString(),
       metadata: {
@@ -58,7 +54,15 @@ export const createThread = action({
       },
     });
 
-    // Generate initial response
+    // Save primary thread ID for this assistant if it's the first thread
+    if (!assistant.primaryThreadId) {
+      await ctx.runMutation(internal.assistants.functions.updateAssistant, {
+        assistantId: args.assistantId,
+        primaryThreadId: threadId,
+      });
+    }
+
+    // Generate initial response with context
     const result = await thread.generateText({
       prompt: args.prompt,
       contextMessages: assistant.initialPrompt
@@ -66,12 +70,6 @@ export const createThread = action({
         : undefined,
     });
 
-    // Update the assistant with the thread ID for future reference
-    await ctx.runMutation(internal.assistants.functions.updateAssistant, {
-      assistantId: args.assistantId,
-      agentThreadId: threadId,
-    });
-    
     return {
       threadId,
       messageId: result.messageId,
@@ -114,23 +112,24 @@ export const continueThread = action({
     );
     if (!assistant) throw new Error("Assistant not found");
 
-    // Get API key
-    let apiKey = "";
+    // Determine which agent to use
+    let agent = assistantAgent;
+    
+    // If custom API key is needed, create a custom agent
     if (assistant.aiProviderId) {
       const provider = await ctx.runQuery(internal.aiProviders.getAIProvider, {
         providerId: assistant.aiProviderId,
       });
-      apiKey = provider?.apiKey || "";
+      if (provider?.apiKey) {
+        agent = createCustomAgent(
+          provider.apiKey,
+          assistant.model,
+          assistant.instructions
+        );
+      }
     }
 
-    // Create agent
-    const agent = createConvexAgent(
-      apiKey,
-      assistant.model,
-      assistant.instructions,
-    );
-
-    // Continue thread
+    // Continue thread with the agent
     const { thread } = await agent.continueThread(ctx, {
       threadId: args.threadId,
       userId: userId.toString(),
@@ -147,9 +146,9 @@ export const continueThread = action({
 });
 
 /**
- * Get all messages for a thread
+ * Get all messages for a thread with streaming support
  */
-export const getMessages = query({
+export const listThreadMessages = query({
   args: {
     threadId: v.string(),
   },
@@ -162,6 +161,11 @@ export const getMessages = query({
     });
   },
 });
+
+/**
+ * Get messages for a thread (legacy function name for backward compatibility)
+ */
+export const getMessages = listThreadMessages;
 
 /**
  * List all threads for the authenticated user

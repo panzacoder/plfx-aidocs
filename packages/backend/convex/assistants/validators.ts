@@ -23,9 +23,10 @@ export const createAssistantSchema = z.object({
   tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])).default(["retrieval"]),
   fileIds: z.array(z.string()).default([]),
   metadata: z.record(z.string(), z.string()).optional(),
+  // Legacy fields maintained for backward compatibility
   externalId: z.string().optional(),
-  usesAgent: z.boolean().default(true),
-  agentThreadId: z.string().optional(),
+  // New fields
+  primaryThreadId: z.string().optional(),
 }).refine(
   (data) => {
     // If mode is restricted, restrictedResponse is required
@@ -62,7 +63,8 @@ export const updateAssistantSchema = z.object({
   fileIds: z.array(z.string()).optional(),
   metadata: z.record(z.string(), z.string()).optional(),
   status: z.enum(["creating", "ready", "failed"]).optional(),
-  agentThreadId: z.string().optional(),
+  // New fields
+  primaryThreadId: z.string().optional(),
 }).refine(
   (data) => {
     // If mode is restricted, restrictedResponse should be defined
