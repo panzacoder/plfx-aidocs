@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@auth/core": "^0.37.4",
+    "@convex-dev/agent": "^0.0.14",
     "@convex-dev/auth": "^0.0.82",
     "@polar-sh/sdk": "^0.25.0",
     "@t3-oss/env-core": "^0.12.0",

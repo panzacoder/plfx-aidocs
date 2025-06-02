@@ -13,7 +13,7 @@ export const createAssistantSchema = z.object({
   organizationId: zid("organizations"),
   aiProviderId: zid("aiProviders").optional(),
   name: z.string().min(1, "Name is required"),
-  model: z.enum(["gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]),
+  model: z.enum(["gpt-4o", "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]),
   instructions: z.string().optional(),
   description: z.string().optional(),
   initialPrompt: z.string().optional(),
@@ -24,7 +24,8 @@ export const createAssistantSchema = z.object({
   fileIds: z.array(z.string()).default([]),
   metadata: z.record(z.string(), z.string()).optional(),
   externalId: z.string().optional(),
-  agentEnabled: z.boolean().optional().default(true),
+  usesAgent: z.boolean().default(true),
+  agentThreadId: z.string().optional(),
 }).refine(
   (data) => {
     // If mode is restricted, restrictedResponse is required
@@ -50,7 +51,7 @@ export const getAssistantSchema = z.object({
 export const updateAssistantSchema = z.object({
   assistantId: zid("assistants"),
   name: z.string().min(1, "Name is required").optional(),
-  model: z.enum(["gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]).optional(),
+  model: z.enum(["gpt-4o", "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]).optional(),
   instructions: z.string().optional(),
   description: z.string().optional(),
   initialPrompt: z.string().optional(),
@@ -61,6 +62,7 @@ export const updateAssistantSchema = z.object({
   fileIds: z.array(z.string()).optional(),
   metadata: z.record(z.string(), z.string()).optional(),
   status: z.enum(["creating", "ready", "failed"]).optional(),
+  agentThreadId: z.string().optional(),
 }).refine(
   (data) => {
     // If mode is restricted, restrictedResponse should be defined

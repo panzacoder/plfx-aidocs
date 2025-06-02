@@ -84,8 +84,11 @@ const searchDocuments = createTool({
 
 /**
  * Creates an agent instance with the specified configuration
+ * 
+ * This function creates a Convex Agent with the provided settings and tools.
+ * It configures the agent with proper context handling, embeddings, and usage tracking.
  */
-export function createAssistantAgent(
+export function createConvexAgent(
   apiKey: string,
   model: string = "gpt-4o",
   instructions?: string,
@@ -127,7 +130,6 @@ export function createAssistantAgent(
     maxSteps: 10,
     usageHandler: async (ctx, args) => {
       // Track usage for billing or analytics
-      // Implement your usage tracking here
       console.log("Token usage:", {
         userId: args.userId,
         threadId: args.threadId,
@@ -148,3 +150,6 @@ export function createAssistantAgent(
     },
   });
 }
+
+// For backward compatibility - alias to the new function name
+export const createAssistantAgent = createConvexAgent;

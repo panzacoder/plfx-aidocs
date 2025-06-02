@@ -13,7 +13,8 @@ export const assistants = {
   initialPrompt: z.string().optional(),
   mode: z.enum(["open", "restricted"]),
   restrictedResponse: z.string().optional(),
-  model: z.enum(["gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]),
+  // Updated model enum to include gpt-4o
+  model: z.enum(["gpt-4o", "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]),
   description: z.string().optional(),
   instructions: z.string().optional(),
   fileIds: z.array(z.string()),
@@ -21,7 +22,10 @@ export const assistants = {
   metadata: z.record(z.string(), z.string()).optional(),
   status: z.enum(["creating", "ready", "failed"]),
   lastSynced: z.number().optional(),
-  agentEnabled: z.boolean().optional(),
+  // Add a field to store agent thread ID for reference
+  agentThreadId: z.string().optional(),
+  // Mark everything as using the agent now (removing optional)
+  usesAgent: z.boolean().default(true),
 };
 
 // Export the table schema for use in schema.ts

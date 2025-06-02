@@ -62,7 +62,7 @@ export const createAssistant = mutation({
       throw new Error("Access denied to this organization");
     }
 
-    // Create assistant in Convex with status "ready" since we're bypassing OpenAI for now
+    // Create assistant in Convex with status "ready" since we're using the Convex Agent
     const assistantId = await ctx.db.insert("assistants", {
       organizationId: args.organizationId,
       aiProviderId: args.aiProviderId, // This could be undefined
@@ -77,11 +77,13 @@ export const createAssistant = mutation({
       fileIds: args.fileIds || [],
       tools: args.tools || ["retrieval"],
       metadata: args.metadata,
-      status: "ready", // Mark as ready since we're using AI Agent
+      status: "ready", // Mark as ready since we're using the Convex Agent
       // Use a consistent identifier for agent-managed assistants
-      externalId: args.agentEnabled ? "agent-managed" : (args.externalId || "legacy-" + Math.random().toString(36).substring(2, 15)),
-      // Store whether this assistant uses the AI Agent implementation
-      agentEnabled: args.agentEnabled ?? true,
+      externalId: args.externalId || "convex-agent-" + Math.random().toString(36).substring(2, 15),
+      // All assistants now use the Convex Agent by default
+      usesAgent: args.usesAgent ?? true,
+      // Agent thread ID will be populated when the first thread is created
+      agentThreadId: args.agentThreadId,
     });
 
     // For now, we're not scheduling OpenAI assistant creation

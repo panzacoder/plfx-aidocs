@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, action } from "../_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "../_generated/api";
-import { createAssistantAgent } from "./agent";
+import { createConvexAgent } from "./agent";
 
 /**
  * Create a new thread and generate an initial response
@@ -26,9 +26,9 @@ export const createThread = action({
     );
     if (!assistant) throw new Error("Assistant not found");
     
-    // Check if this assistant is configured to use the AI Agent
-    if (assistant.agentEnabled === false) {
-      throw new Error("This assistant is not configured to use the AI Agent. Please use the legacy API.");
+    // All assistants now use the Agent by default
+    if (assistant.usesAgent === false) {
+      throw new Error("This assistant is not configured to use the Convex Agent.");
     }
 
     // Get API key from provider or environment
@@ -41,7 +41,7 @@ export const createThread = action({
     }
 
     // Create agent instance with appropriate config
-    const agent = createAssistantAgent(
+    const agent = createConvexAgent(
       apiKey,
       assistant.model,
       assistant.instructions,
@@ -66,6 +66,12 @@ export const createThread = action({
         : undefined,
     });
 
+    // Update the assistant with the thread ID for future reference
+    await ctx.runMutation(internal.assistants.functions.updateAssistant, {
+      assistantId: args.assistantId,
+      agentThreadId: threadId,
+    });
+    
     return {
       threadId,
       messageId: result.messageId,
@@ -118,7 +124,7 @@ export const continueThread = action({
     }
 
     // Create agent
-    const agent = createAssistantAgent(
+    const agent = createConvexAgent(
       apiKey,
       assistant.model,
       assistant.instructions,

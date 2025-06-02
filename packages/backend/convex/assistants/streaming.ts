@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { action, httpAction } from "../_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "../_generated/api";
-import { createAssistantAgent } from "./agent";
+import { createConvexAgent } from "./agent";
 
 /**
  * HTTP endpoint to initiate a streaming response
@@ -66,8 +66,59 @@ export const streamThreadResponse = httpAction(async (ctx, request) => {
 });
 
 /**
- * Generate streaming response using the AI agent
- * This function is called by the scheduler and runs in the background
+ * Generate streaming response directly with the Convex agent
+ * This is a more streamlined approach using the built-in streaming capabilities
+ */
+export const generateAgentStreamingResponse = action({
+  args: {
+    threadId: v.string(),
+    prompt: v.string(),
+    assistantId: v.id("assistants"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Get assistant details
+    const assistant = await ctx.runQuery(internal.assistants.functions.getAssistant, {
+      assistantId: args.assistantId,
+    });
+    if (!assistant) throw new Error("Assistant not found");
+
+    // Get API key
+    let apiKey = "";
+    if (assistant.aiProviderId) {
+      const provider = await ctx.runQuery(internal.aiProviders.getAIProvider, { 
+        providerId: assistant.aiProviderId 
+      });
+      apiKey = provider?.apiKey || "";
+    }
+
+    // Create agent instance
+    const agent = createConvexAgent(
+      apiKey, 
+      assistant.model, 
+      assistant.instructions
+    );
+
+    // Get thread
+    const { thread } = await agent.continueThread(ctx, { 
+      threadId: args.threadId,
+      userId: userId.toString()
+    });
+
+    // Generate streaming response directly using Convex agent's streaming
+    return await thread.generateText({ 
+      prompt: args.prompt,
+      stream: true
+    });
+  },
+});
+
+/**
+ * Generate streaming response using the Convex agent
+ * This function is called by the scheduler and runs in the background.
+ * It supports native streaming with the Convex agent.
  */
 export const generateStreamingResponse = action({
   args: {
@@ -95,7 +146,7 @@ export const generateStreamingResponse = action({
       }
 
       // Create agent instance
-      const agent = createAssistantAgent(
+      const agent = createConvexAgent(
         apiKey, 
         assistant.model, 
         assistant.instructions
