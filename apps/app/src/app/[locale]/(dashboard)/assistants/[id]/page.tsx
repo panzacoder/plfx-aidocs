@@ -156,11 +156,9 @@ export default function AssistantPage({ params }: { params: { id: string } }) {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium">AI Agent</h3>
+                  <h3 className="text-sm font-medium">Convex Agent</h3>
                   <div className="flex items-center mt-1">
-                    <Badge variant={assistant.agentEnabled !== false ? "success" : "secondary"}>
-                      {assistant.agentEnabled !== false ? "Enabled" : "Legacy"}
-                    </Badge>
+                    <Badge variant="success">Enabled</Badge>
                   </div>
                 </div>
                 
@@ -202,7 +200,6 @@ export default function AssistantPage({ params }: { params: { id: string } }) {
                 assistantId={assistantId}
                 assistantName={assistant.name}
                 disclaimer={assistant.disclaimer}
-                useAgent={assistant.agentEnabled !== false}
               />
             </TabsContent>
             

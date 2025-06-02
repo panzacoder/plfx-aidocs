@@ -73,10 +73,13 @@ export function ChatInterface({
   const renderMessage = (message: Message) => {
     const isUser = message.role === "user";
     
-    // Apply smooth text for streaming assistant messages
+    // Apply smooth text for streaming assistant messages with enhanced configuration
     const content = isUser 
       ? message.content 
-      : useSmoothText(message.content, message.isStreaming || false);
+      : useSmoothText(message.content, message.isStreaming || false, {
+          initialCharsPerSecond: 25, // Adjust for desired speed
+          adaptiveSpeed: true,       // Adapt to actual streaming speed
+        });
     
     return (
       <div 

@@ -163,7 +163,6 @@ describe("AssistantForm", () => {
       description: "Test description",
       mode: "open",
       tools: ["retrieval"],
-      agentEnabled: true,
     });
 
     it("should render edit form with assistant data", () => {
@@ -200,14 +199,7 @@ describe("AssistantForm", () => {
       expect(checkboxes.length).toBeGreaterThan(0);
     });
 
-    it("should enable/disable agent features", async () => {
-      const user = await mockUserEvent();
-      render(<AssistantForm {...defaultProps} />);
-
-      // Should render agent toggle
-      const switches = screen.getAllByTestId("switch");
-      expect(switches.length).toBeGreaterThan(0);
-    });
+    // All assistants now use Convex Agent by default, so no toggle is needed
   });
 
   describe("Form Submission", () => {
