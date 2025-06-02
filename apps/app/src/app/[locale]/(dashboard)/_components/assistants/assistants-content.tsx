@@ -19,9 +19,9 @@ export function AssistantsContent() {
   if (!organizationId) {
     return (
       <div className="rounded-lg border p-8 text-center">
-        <h3 className="mb-2 text-lg font-medium">No Organization Found</h3>
+        <h3 className="mb-2 text-lg font-medium">No Facility Found</h3>
         <p className="text-muted-foreground mb-4">
-          You need to create an organization to get started.
+          Please complete your facility setup to access care management tools.
         </p>
         {/* We'll add a button here in the future to create an organization if necessary */}
       </div>

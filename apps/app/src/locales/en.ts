@@ -1,14 +1,14 @@
 export default {
   dashboard: {
-    title: "Create your App",
+    title: "Care Management Dashboard",
     description:
-      "Build your app on top of Convex SaaS, explore the documentation and start your journey.",
+      "Streamline your assisted living facility operations with AI-powered care documentation and compliance tools.",
     bodyTitle: "Get Started",
     bodyDescription:
-      "Explore the Dashboard and get started with your first app.",
+      "Manage residents, documentation, and care plans with intelligent assistance.",
     bodyTip: "TIP: Try changing the language!",
     headerTitle: "Dashboard",
-    headerDescription: "Manage your apps and view your usage.",
+    headerDescription: "Overview of your facility's care operations and AI assistants.",
     documentationLink: "Explore Documentation",
   },
   settings: {

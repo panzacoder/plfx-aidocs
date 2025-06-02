@@ -74,8 +74,8 @@ export function Navigation({
                   <p className="text-sm font-medium text-primary/80">
                     {user?.name || ""}
                   </p>
-                  <span className="flex h-5 items-center rounded-full bg-primary/10 px-2 text-xs font-medium text-primary/80">
-                    Free
+                  <span className="flex h-5 items-center rounded-full bg-green-100 px-2 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                    Trial
                   </span>
                 </div>
                 <span className="flex flex-col items-center justify-center">
@@ -89,7 +89,7 @@ export function Navigation({
               className="min-w-56 bg-card p-2"
             >
               <DropdownMenuLabel className="flex items-center text-xs font-normal text-primary/60">
-                Personal Account
+                Facility Account
               </DropdownMenuLabel>
               <DropdownMenuItem className="h-10 w-full cursor-pointer justify-between rounded-md bg-secondary px-2">
                 <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export function Navigation({
                   className="w-full"
                   onClick={() => router.push("/settings/billing")}
                 >
-                  Upgrade to PRO
+                  Upgrade to Professional
                 </Button>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -216,7 +216,7 @@ export function Navigation({
               `${buttonVariants({ variant: "ghost", size: "sm" })} text-primary/80`,
             )}
           >
-            Publish
+            Care Plans
           </Link>
         </div>
 

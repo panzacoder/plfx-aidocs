@@ -23,7 +23,7 @@ export function CreateAssistantCard({ organizationId }: CreateAssistantCardProps
         <div className="flex h-12 w-12 items-center justify-center rounded-full border">
           <Plus className="h-6 w-6 text-primary/60" />
         </div>
-        <span className="text-sm font-medium text-primary/60">Create New Assistant</span>
+        <span className="text-sm font-medium text-primary/60">Create Care Assistant</span>
       </Button>
     </Card>
   );

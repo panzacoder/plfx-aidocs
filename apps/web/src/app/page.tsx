@@ -15,19 +15,12 @@ export default function Page() {
       <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent pointer-events-none -z-10" />
 
       <h1 className="font-departure text-[40px] md:text-[84px] relative z-10 text-center h-[120px] md:h-auto leading-tight">
-        <AnimatedText text="Production ready code" />
+        <AnimatedText text="AI-Powered Care Management" />
       </h1>
 
       <p className="relative z-10 text-center md:text-xl max-w-[80%] mt-2 md:mt-6">
-        An open-source starter kit based on{" "}
-        <a href="https://midday.ai?utm_source=v1-convex" className="underline">
-          Midday
-        </a>
-        . Now on{" "}
-        <a href="https://convex.dev/c/middayv1template" className="underline">
-          Convex
-        </a>
-        .
+        Streamline your assisted living facility operations with intelligent documentation, 
+        regulatory compliance, and care coordination tools built for healthcare professionals.
       </p>
 
       {/* In process */}
@@ -35,8 +28,18 @@ export default function Page() {
         Security verified by Kenshū.
       </span> */}
 
-      <div className="mt-10 mb-8">
-        <CopyText value="npm create @convex-dev/v1@latest" />
+      <div className="mt-10 mb-8 flex flex-col items-center gap-4">
+        <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-2">
+            ✓ HIPAA Compliant
+          </span>
+          <span className="flex items-center gap-2">
+            ✓ Real-time Collaboration
+          </span>
+          <span className="flex items-center gap-2">
+            ✓ AI-Powered Insights
+          </span>
+        </div>
       </div>
 
       <TooltipProvider delayDuration={0}>
@@ -48,12 +51,12 @@ export default function Page() {
               rel="noreferrer"
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm">Get started →</span>
+                <span className="text-sm">Start Your Free Trial →</span>
               </div>
             </a>
           </TooltipTrigger>
           <TooltipContent side="bottom" sideOffset={15} className="text-xs">
-            Log in to the example dashboard
+            Access your care management dashboard
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

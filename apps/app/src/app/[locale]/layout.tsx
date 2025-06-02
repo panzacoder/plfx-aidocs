@@ -10,8 +10,8 @@ import { ConvexClientProvider } from "../convex-client-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Create v1",
-  description: "Production ready Next.js app",
+  title: "CareFlow AI - Assisted Living Management Platform",
+  description: "AI-powered care management platform for assisted living facilities. Streamline documentation, ensure compliance, and enhance resident care.",
 };
 
 export const viewport = {
