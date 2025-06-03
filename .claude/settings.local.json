@@ -8,7 +8,12 @@
       "Bash(find:*)",
       "Bash(npm test)",
       "Bash(npm run build:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm add:*)",
+      "WebFetchTool(domain:github.com)",
+      "WebFetchTool(domain:stack.convex.dev)",
+      "Bash(ls:*)"
     ]
   },
   "enableAllProjectMcpServers": false

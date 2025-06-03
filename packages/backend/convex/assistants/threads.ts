@@ -162,10 +162,7 @@ export const listThreadMessages = query({
   },
 });
 
-/**
- * Get messages for a thread (legacy function name for backward compatibility)
- */
-export const getMessages = listThreadMessages;
+// No legacy function needed - listThreadMessages is the primary function
 
 /**
  * List all threads for the authenticated user

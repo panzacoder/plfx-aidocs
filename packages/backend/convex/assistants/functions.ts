@@ -25,7 +25,7 @@ const assistantValidator = v.object({
   initialPrompt: v.optional(v.string()),
   mode: v.union(v.literal("open"), v.literal("restricted")),
   restrictedResponse: v.optional(v.string()),
-  model: v.union(v.literal("gpt-4-turbo-preview"), v.literal("gpt-4"), v.literal("gpt-3.5-turbo")),
+  model: v.union(v.literal("gpt-4o"), v.literal("gpt-4-turbo-preview"), v.literal("gpt-4"), v.literal("gpt-3.5-turbo")),
   description: v.optional(v.string()),
   instructions: v.optional(v.string()),
   fileIds: v.array(v.string()),
@@ -180,7 +180,7 @@ export const updateAssistant = mutation({
   args: {
     assistantId: v.id("assistants"),
     name: v.optional(v.string()),
-    model: v.optional(v.union(v.literal("gpt-4-turbo-preview"), v.literal("gpt-4"), v.literal("gpt-3.5-turbo"))),
+    model: v.optional(v.union(v.literal("gpt-4o"), v.literal("gpt-4-turbo-preview"), v.literal("gpt-4"), v.literal("gpt-3.5-turbo"))),
     instructions: v.optional(v.string()),
     description: v.optional(v.string()),
     initialPrompt: v.optional(v.string()),

@@ -132,14 +132,14 @@ describe("AssistantForm", () => {
     it("should have required fields", () => {
       render(<AssistantForm {...defaultProps} />);
 
-      // Name field should be present
-      expect(screen.getByText("Name")).toBeInTheDocument();
+      // Agent Name field should be present
+      expect(screen.getByText("Agent Name")).toBeInTheDocument();
       
-      // Model selection should be present
-      expect(screen.getByText("Model")).toBeInTheDocument();
+      // Description field should be present
+      expect(screen.getByText("Description")).toBeInTheDocument();
       
-      // Tools section should be present
-      expect(screen.getByText("Tools")).toBeInTheDocument();
+      // System Prompt field should be present
+      expect(screen.getByText("System Prompt")).toBeInTheDocument();
     });
 
     it("should show validation error for empty name", async () => {
@@ -182,24 +182,14 @@ describe("AssistantForm", () => {
   });
 
   describe("Form Interactions", () => {
-    it("should handle mode changes", async () => {
-      const user = await mockUserEvent();
+    it("should have a 'Use Default' button for system prompt", async () => {
       render(<AssistantForm {...defaultProps} />);
-
-      // Find the mode switch (for restricted mode)
-      const switches = screen.getAllByTestId("switch");
-      expect(switches.length).toBeGreaterThan(0);
+      
+      // Find the "Use Default" button for the system prompt
+      expect(screen.getByText("Use Default")).toBeInTheDocument();
     });
-
-    it("should handle tool selection", () => {
-      render(<AssistantForm {...defaultProps} />);
-
-      // Check if tool checkboxes are present
-      const checkboxes = screen.getAllByTestId("checkbox");
-      expect(checkboxes.length).toBeGreaterThan(0);
-    });
-
-    // All assistants now use Convex Agent by default, so no toggle is needed
+    
+    // All settings are now simplified with good defaults
   });
 
   describe("Form Submission", () => {
@@ -248,17 +238,17 @@ describe("AssistantForm", () => {
   });
 
   describe("Validation", () => {
-    it("should require at least one tool", () => {
+    it("should only require name as mandatory field", () => {
       render(<AssistantForm {...defaultProps} />);
 
-      // Tools section should be present
-      expect(screen.getByText("Tools")).toBeInTheDocument();
+      // Agent Name field should be present and is the only required field
+      expect(screen.getByText("Agent Name")).toBeInTheDocument();
     });
-
-    it("should require restricted response when mode is restricted", () => {
+    
+    it("should apply defaults for empty fields", () => {
       render(<AssistantForm {...defaultProps} />);
-
-      // Form should render with validation rules
+      
+      // Form should render with good defaults
       expect(screen.getByTestId("card")).toBeInTheDocument();
     });
   });

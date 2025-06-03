@@ -40,6 +40,7 @@
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.56.1",
+    "react-markdown": "^10.1.0",
     "remeda": "^2.14.0",
     "tailwind-merge": "^2.6.0",
     "zod": "^3.24.1"

@@ -12,7 +12,6 @@ import type * as agents from "../agents.js";
 import type * as aiProviders_functions from "../aiProviders/functions.js";
 import type * as aiProviders_validators from "../aiProviders/validators.js";
 import type * as assistants_actions from "../assistants/actions.js";
-import type * as assistants_agent from "../assistants/agent.js";
 import type * as assistants_functions from "../assistants/functions.js";
 import type * as assistants_internal from "../assistants/internal.js";
 import type * as assistants_streaming from "../assistants/streaming.js";
@@ -67,7 +66,6 @@ declare const fullApi: ApiFromModules<{
   "aiProviders/functions": typeof aiProviders_functions;
   "aiProviders/validators": typeof aiProviders_validators;
   "assistants/actions": typeof assistants_actions;
-  "assistants/agent": typeof assistants_agent;
   "assistants/functions": typeof assistants_functions;
   "assistants/internal": typeof assistants_internal;
   "assistants/streaming": typeof assistants_streaming;

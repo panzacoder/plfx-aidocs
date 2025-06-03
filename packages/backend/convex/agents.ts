@@ -1,3 +1,11 @@
+/**
+ * CENTRALIZED AGENT CONFIGURATION
+ * 
+ * This is the single source of truth for all agent-related functionality.
+ * All assistant implementations should use the exports from this file to ensure
+ * consistent behavior and configuration across the application.
+ */
+
 import { Agent, createTool } from "@convex-dev/agent";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
@@ -22,7 +30,17 @@ function formatFileSize(bytes: number): string {
  * Document search tool for AI agents
  * 
  * This tool allows AI agents to search through all documents uploaded to 
- * assistants within the same organization.
+ * assistants within the same organization. It searches document metadata including:
+ * - File names
+ * - File types
+ * - File metadata
+ * 
+ * Results are formatted for easy consumption by the AI agent and include:
+ * - File name and type
+ * - File size (human readable)
+ * - Upload date
+ * - Associated assistant
+ * - File ID for reference
  */
 const searchDocuments = createTool({
   description: "Search organization documents by query. Finds files by name, type, and metadata across all assistants in the organization.",
@@ -70,7 +88,14 @@ const searchDocuments = createTool({
 
 /**
  * Define a centralized assistant agent configuration
- * This is the primary agent instance used throughout the application
+ * 
+ * This is the primary agent instance used throughout the application.
+ * It's configured with:
+ * - GPT-4o model for chat completions
+ * - text-embedding-3-small for embeddings
+ * - Document search tool for retrieving information
+ * - Optimized context settings for good conversation memory
+ * - Usage tracking for analytics
  */
 export const assistantAgent = new Agent(components.agent, {
   chat: openai.chat("gpt-4o"),
@@ -104,12 +129,30 @@ export const assistantAgent = new Agent(components.agent, {
       provider: args.provider,
       usage: args.usage,
     });
+    
+    // TODO: Implement proper usage tracking in the future
+    // Example:
+    // await ctx.runMutation(internal.usage.trackTokenUsage, {
+    //   userId: args.userId,
+    //   threadId: args.threadId,
+    //   model: args.model,
+    //   provider: args.provider,
+    //   usage: args.usage,
+    // });
   },
 });
 
 /**
  * Factory function to create customized agents with specific settings
- * Used when custom API keys or model configurations are needed
+ * 
+ * Used when custom API keys or model configurations are needed.
+ * All agents created with this function will have the same tools and
+ * context settings as the main assistantAgent.
+ * 
+ * @param apiKey - The OpenAI API key to use (falls back to env variable)
+ * @param model - The model to use (defaults to "gpt-4o")
+ * @param instructions - Custom system instructions (defaults to "You are a helpful assistant.")
+ * @returns A configured Agent instance
  */
 export function createCustomAgent(
   apiKey: string,
@@ -153,6 +196,6 @@ export function createCustomAgent(
 
 /**
  * For backward compatibility with existing code
- * This will be removed in a future update
+ * @deprecated Use createCustomAgent instead
  */
 export const createAssistantAgent = createCustomAgent;

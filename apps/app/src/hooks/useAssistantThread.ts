@@ -1,8 +1,7 @@
 import { useState, useCallback } from "react";
-import { useAction } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { api } from "@v1/backend/convex/_generated/api";
 import { Id } from "@v1/backend/convex/_generated/dataModel";
-import { useThreadMessages } from "@convex-dev/agent/react";
 
 export interface Message {
   id: string;
@@ -20,6 +19,9 @@ export interface UseAssistantThreadProps {
 /**
  * Hook for managing assistant conversation threads
  * Uses the Convex agent's built-in message handling and streaming
+ * 
+ * @param props Configuration options
+ * @returns Thread state and message management functions
  */
 export function useAssistantThread({
   assistantId,
@@ -28,17 +30,14 @@ export function useAssistantThread({
   const [threadId, setThreadId] = useState<string | undefined>(initialThreadId);
   const [error, setError] = useState<string | null>(null);
 
-  // Use the agent's built-in hooks with streaming enabled
-  const {
-    messages: agentMessages,
-    isLoading: isMessagesLoading,
-    isStreaming,
-    optimisticallySendMessage,
-  } = useThreadMessages(
+  // Fetch messages using standard Convex query
+  const agentMessages = useQuery(
     api.assistants.threads.listThreadMessages,
-    threadId ? { threadId } : "skip",
-    { stream: true }
+    threadId ? { threadId } : "skip"
   );
+  
+  const isMessagesLoading = agentMessages === undefined && threadId !== undefined;
+  const [isStreaming, setIsStreaming] = useState(false);
 
   // Convert agent messages to our app's message format
   const messages: Message[] = agentMessages?.map(msg => ({
@@ -68,28 +67,21 @@ export function useAssistantThread({
           });
           setThreadId(result.threadId);
         } else {
-          // For existing threads, use optimistic updates
-          // This immediately shows the user message and streams the response
-          optimisticallySendMessage(
-            {
-              threadId,
-              content: prompt,
-              role: "user",
-            },
-            {
-              // Parameters for generateStreamingResponse action
-              threadId,
-              prompt,
-              assistantId,
-            }
-          );
+          // For existing threads, generate a streaming response
+          setIsStreaming(true);
+          await generateResponseAction({
+            threadId,
+            prompt,
+            assistantId,
+          });
+          setIsStreaming(false);
         }
       } catch (err: any) {
         console.error("Error sending message:", err);
         setError(err.message || "Failed to send message");
       }
     },
-    [threadId, assistantId, createThreadAction, optimisticallySendMessage]
+    [threadId, assistantId, createThreadAction, generateResponseAction]
   );
 
   const isLoading = isMessagesLoading || false;
@@ -102,13 +94,4 @@ export function useAssistantThread({
     error,
     sendMessage,
   };
-}
-
-/**
- * Legacy hook for backward compatibility during migration
- * @deprecated Use useAssistantThread instead
- */
-export function useLegacyAssistantThread(props: UseAssistantThreadProps & { useAgent?: boolean }) {
-  console.warn("useLegacyAssistantThread is deprecated. Use useAssistantThread instead.");
-  return useAssistantThread(props);
 }
