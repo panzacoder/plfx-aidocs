@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAction, useQuery } from "convex/react";
 import { api } from "@v1/backend/convex/_generated/api";
 import type { Id } from "@v1/backend/convex/_generated/dataModel";
+import { useSmoothText } from "@/hooks/useSmoothText";
 import { Button } from "@v1/ui/button";
 import { Input } from "@v1/ui/input";
 import { Loader2, Send, AlertTriangle } from "lucide-react";
@@ -28,9 +29,17 @@ export default function ChatPage({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const smoothedText = useSmoothText(streamingText, isLoading, {
+    adaptiveSpeed: true,
+    initialCharsPerSecond: 30,
+    minSpeed: 15,
+    maxSpeed: 80,
+  });
 
   const createThread = useAction(api.chat.functions.createThread);
   const sendMessage = useAction(api.chat.functions.sendMessage);
@@ -38,10 +47,10 @@ export default function ChatPage({
   // Theme from query
   const theme = useQuery(api.themes.functions.getTheme, { assistantId });
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages or streaming updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, smoothedText]);
 
   // Add initial prompt as first message
   useEffect(() => {
@@ -80,6 +89,7 @@ export default function ChatPage({
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    setStreamingText("");
 
     try {
       // Create thread on first message
@@ -97,14 +107,22 @@ export default function ChatPage({
         message: userMessage.content,
       });
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `assistant-${Date.now()}`,
-          role: "assistant",
-          content: response.text,
-        },
-      ]);
+      // Set the full text for smooth rendering to finish
+      setStreamingText(response.text);
+
+      // After a short delay for the smooth text to catch up, add to messages
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `assistant-${Date.now()}`,
+            role: "assistant",
+            content: response.text,
+          },
+        ]);
+        setStreamingText("");
+        setIsLoading(false);
+      }, 100);
     } catch (error) {
       console.error("Error sending message:", error);
       setMessages((prev) => [
@@ -112,11 +130,10 @@ export default function ChatPage({
         {
           id: `error-${Date.now()}`,
           role: "assistant",
-          content:
-            "Sorry, something went wrong. Please try again.",
+          content: "Sorry, something went wrong. Please try again.",
         },
       ]);
-    } finally {
+      setStreamingText("");
       setIsLoading(false);
     }
   }, [input, isLoading, threadId, assistantId, createThread, sendMessage]);
@@ -234,12 +251,16 @@ export default function ChatPage({
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="rounded-2xl bg-muted px-4 py-2.5">
-                <div className="flex gap-1">
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40 [animation-delay:0ms]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40 [animation-delay:150ms]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40 [animation-delay:300ms]" />
-                </div>
+              <div className="max-w-[80%] rounded-2xl bg-muted px-4 py-2.5 text-sm">
+                {smoothedText ? (
+                  <p className="whitespace-pre-wrap">{smoothedText}</p>
+                ) : (
+                  <div className="flex gap-1">
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40 [animation-delay:0ms]" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40 [animation-delay:150ms]" />
+                    <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/40 [animation-delay:300ms]" />
+                  </div>
+                )}
               </div>
             </div>
           )}

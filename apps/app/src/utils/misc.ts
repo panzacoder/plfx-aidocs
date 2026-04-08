@@ -1,11 +1,7 @@
-import { CURRENCIES } from "@v1/backend/convex/schema";
-
 /**
- * Locales.
+ * Get the user's locale currency.
+ * Only USD supported for now.
  */
 export function getLocaleCurrency() {
-  return navigator.languages.includes("en-US")
-    ? CURRENCIES.USD
-    : // Only support USD for now due to Polar limitations.
-      CURRENCIES.USD;
+  return "usd" as const;
 }
