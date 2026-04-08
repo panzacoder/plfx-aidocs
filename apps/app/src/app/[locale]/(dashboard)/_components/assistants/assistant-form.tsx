@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { api } from "@v1/backend/convex/_generated/api";
-import { Id } from "@v1/backend/convex/_generated/dataModel";
+import type { Id } from "@v1/backend/convex/_generated/dataModel";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -29,85 +29,118 @@ import {
 } from "@v1/ui/select";
 import { Switch } from "@v1/ui/switch";
 import { useToast } from "@v1/ui/use-toast";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@v1/ui/card";
-import { Checkbox } from "@v1/ui/checkbox";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@v1/ui/card";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
-// Define form schema
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
-  model: z.enum(["gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]),
+  model: z.string(),
   instructions: z.string().optional(),
   description: z.string().optional(),
   initialPrompt: z.string().optional(),
   disclaimer: z.string().optional(),
   mode: z.enum(["open", "restricted"]),
-  restrictedResponse: z.string().optional().or(z.string().min(1, {
-    message: "Restricted response is required when restricted mode is enabled",
-  })),
-  tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])),
+  restrictedResponse: z.string().optional(),
+  isPublic: z.boolean(),
+  allowedDomains: z.string().optional(), // comma-separated, parsed on submit
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface AssistantFormProps {
   organizationId: Id<"organizations">;
   assistant?: {
     _id: Id<"assistants">;
-    name?: string;
-    model: "gpt-4-turbo-preview" | "gpt-4" | "gpt-3.5-turbo";
+    name: string;
+    model: string;
     instructions?: string;
     description?: string;
     initialPrompt?: string;
     disclaimer?: string;
     mode: "open" | "restricted";
     restrictedResponse?: string;
-    tools: string[];
+    isPublic: boolean;
+    allowedDomains: string[];
   };
 }
 
-export function AssistantForm({ organizationId, assistant }: AssistantFormProps) {
+export function AssistantForm({
+  organizationId,
+  assistant,
+}: AssistantFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const createAssistant = useMutation(api.assistants.functions.createAssistant);
-  const updateAssistant = useMutation(api.assistants.functions.updateAssistant);
+  const createAssistant = useMutation(
+    api.assistants.functions.createAssistant,
+  );
+  const updateAssistant = useMutation(
+    api.assistants.functions.updateAssistant,
+  );
 
   const isEdit = !!assistant;
 
-  // Initialize form with assistant data or defaults
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: assistant ? {
-      name: assistant.name || "",
-      model: assistant.model,
-      instructions: assistant.instructions || "",
-      description: assistant.description || "",
-      initialPrompt: assistant.initialPrompt || "",
-      disclaimer: assistant.disclaimer || "",
-      mode: assistant.mode,
-      restrictedResponse: assistant.restrictedResponse || "",
-      tools: assistant.tools as any[],
-    } : {
-      name: "",
-      model: "gpt-4-turbo-preview",
-      instructions: "",
-      description: "",
-      initialPrompt: "",
-      disclaimer: "",
-      mode: "open",
-      restrictedResponse: "",
-      tools: ["retrieval"],
-    },
+    defaultValues: assistant
+      ? {
+          name: assistant.name,
+          model: assistant.model,
+          instructions: assistant.instructions ?? "",
+          description: assistant.description ?? "",
+          initialPrompt: assistant.initialPrompt ?? "",
+          disclaimer: assistant.disclaimer ?? "",
+          mode: assistant.mode,
+          restrictedResponse: assistant.restrictedResponse ?? "",
+          isPublic: assistant.isPublic,
+          allowedDomains: assistant.allowedDomains.join(", "),
+        }
+      : {
+          name: "",
+          model: "gpt-4o",
+          instructions: "",
+          description: "",
+          initialPrompt: "",
+          disclaimer: "",
+          mode: "open",
+          restrictedResponse: "",
+          isPublic: false,
+          allowedDomains: "",
+        },
   });
 
   const mode = form.watch("mode");
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
+      const domains = values.allowedDomains
+        ? values.allowedDomains
+            .split(",")
+            .map((d) => d.trim())
+            .filter(Boolean)
+        : [];
+
       if (isEdit && assistant) {
         await updateAssistant({
           assistantId: assistant._id,
-          ...values,
+          name: values.name,
+          model: values.model,
+          instructions: values.instructions,
+          description: values.description,
+          initialPrompt: values.initialPrompt,
+          disclaimer: values.disclaimer,
+          mode: values.mode,
+          restrictedResponse: values.restrictedResponse,
+          isPublic: values.isPublic,
+          allowedDomains: domains,
         });
 
         toast({
@@ -117,7 +150,16 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
       } else {
         const result = await createAssistant({
           organizationId,
-          ...values,
+          name: values.name,
+          model: values.model,
+          instructions: values.instructions,
+          description: values.description,
+          initialPrompt: values.initialPrompt,
+          disclaimer: values.disclaimer,
+          mode: values.mode,
+          restrictedResponse: values.restrictedResponse,
+          isPublic: values.isPublic,
+          allowedDomains: domains,
         });
 
         toast({
@@ -125,14 +167,15 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
           description: "Your new assistant has been created successfully.",
         });
 
-        // Navigate to the assistant page
-        router.push(`/assistants/${result._id}`);
+        if (result?._id) {
+          router.push(`/assistants/${result._id}`);
+        }
       }
     } catch (error) {
       console.error("Error creating/updating assistant:", error);
       toast({
         title: "Error",
-        description: `Failed to ${isEdit ? "update" : "create"} assistant. Please try again.`,
+        description: `Failed to ${isEdit ? "update" : "create"} assistant.`,
         variant: "destructive",
       });
     } finally {
@@ -143,25 +186,30 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
   return (
     <Card className="w-full">
       <CardHeader>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="mb-2 w-fit p-0 hover:bg-transparent"
           onClick={() => router.back()}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <CardTitle>{isEdit ? "Edit Assistant" : "Create New Assistant"}</CardTitle>
+        <CardTitle>
+          {isEdit ? "Edit Assistant" : "Create New Assistant"}
+        </CardTitle>
         <CardDescription>
-          {isEdit 
+          {isEdit
             ? "Update your assistant's settings and capabilities"
-            : "Configure a new AI assistant with custom settings"
-          }
+            : "Configure a new AI assistant with custom settings"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            {/* Name */}
             <FormField
               control={form.control}
               name="name"
@@ -179,14 +227,15 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
               )}
             />
 
+            {/* Model */}
             <FormField
               control={form.control}
               name="model"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Model</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
@@ -195,9 +244,13 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="gpt-4-turbo-preview">GPT-4 Turbo (Recommended)</SelectItem>
-                      <SelectItem value="gpt-4">GPT-4</SelectItem>
-                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                      <SelectItem value="gpt-4o">
+                        GPT-4o (Recommended)
+                      </SelectItem>
+                      <SelectItem value="gpt-4o-mini">
+                        GPT-4o Mini (Faster, cheaper)
+                      </SelectItem>
+                      <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>
@@ -208,6 +261,7 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
               )}
             />
 
+            {/* Description */}
             <FormField
               control={form.control}
               name="description"
@@ -215,9 +269,9 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="A helpful assistant that..." 
-                      {...field} 
+                    <Textarea
+                      placeholder="A helpful assistant that..."
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription>
@@ -228,6 +282,7 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
               )}
             />
 
+            {/* Instructions */}
             <FormField
               control={form.control}
               name="instructions"
@@ -235,92 +290,22 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
                 <FormItem>
                   <FormLabel>Instructions</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="You are an AI assistant that helps with..." 
+                    <Textarea
+                      placeholder="You are an AI assistant that helps with..."
                       className="min-h-32"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    System instructions that define how the assistant should behave
+                    System instructions that define how the assistant should
+                    behave
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="tools"
-              render={() => (
-                <FormItem>
-                  <div className="mb-4">
-                    <FormLabel>Tools</FormLabel>
-                    <FormDescription>
-                      Enable capabilities for your assistant
-                    </FormDescription>
-                  </div>
-                  <div className="space-y-2">
-                    <FormField
-                      control={form.control}
-                      name="tools"
-                      render={({ field }) => {
-                        return (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes("retrieval")}
-                                onCheckedChange={(checked) => {
-                                  const updatedTools = checked
-                                    ? [...field.value, "retrieval"]
-                                    : field.value.filter((tool) => tool !== "retrieval");
-                                  field.onChange(updatedTools);
-                                }}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>Retrieval</FormLabel>
-                              <FormDescription>
-                                Allow the assistant to search and retrieve information from files
-                              </FormDescription>
-                            </div>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="tools"
-                      render={({ field }) => {
-                        return (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes("code_interpreter")}
-                                onCheckedChange={(checked) => {
-                                  const updatedTools = checked
-                                    ? [...field.value, "code_interpreter"]
-                                    : field.value.filter((tool) => tool !== "code_interpreter");
-                                  field.onChange(updatedTools);
-                                }}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>Code Interpreter</FormLabel>
-                              <FormDescription>
-                                Allow the assistant to run code and perform data analysis
-                              </FormDescription>
-                            </div>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* Restricted Mode */}
             <FormField
               control={form.control}
               name="mode"
@@ -335,11 +320,14 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
                           field.onChange(checked ? "restricted" : "open");
                         }}
                       />
-                      <span>{field.value === "restricted" ? "Enabled" : "Disabled"}</span>
+                      <span>
+                        {field.value === "restricted" ? "Enabled" : "Disabled"}
+                      </span>
                     </div>
                   </FormControl>
                   <FormDescription>
-                    When enabled, the assistant will respond with a predefined message to questions outside its knowledge base
+                    When enabled, the assistant will only answer questions
+                    related to its uploaded documents
                   </FormDescription>
                 </FormItem>
               )}
@@ -353,13 +341,13 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
                   <FormItem>
                     <FormLabel>Restricted Response</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="I can only answer questions about topics in my knowledge base." 
-                        {...field} 
+                      <Textarea
+                        placeholder="I can only answer questions about topics in my knowledge base."
+                        {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Response to show when a question is outside the allowed scope
+                      Response shown when a question is outside the allowed scope
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -367,6 +355,7 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
               />
             )}
 
+            {/* Disclaimer */}
             <FormField
               control={form.control}
               name="disclaimer"
@@ -374,38 +363,86 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
                 <FormItem>
                   <FormLabel>Disclaimer</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="This AI assistant is provided for..." 
-                      {...field} 
+                    <Textarea
+                      placeholder="This AI assistant is provided for informational purposes..."
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    Optional disclaimer to show at the beginning of conversations
+                    Optional disclaimer shown at the start of conversations
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* Initial Prompt */}
             <FormField
               control={form.control}
               name="initialPrompt"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Initial Prompt</FormLabel>
+                  <FormLabel>Welcome Message</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Hello! How can I help you today?" 
-                      {...field} 
+                    <Textarea
+                      placeholder="Hello! How can I help you today?"
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    Optional message to start conversations with
+                    First message shown when a user starts a conversation
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Publishing Settings */}
+            <div className="rounded-lg border border-border p-4 space-y-4">
+              <h3 className="text-sm font-medium">Publishing</h3>
+
+              <FormField
+                control={form.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between space-y-0">
+                    <div>
+                      <FormLabel>Public</FormLabel>
+                      <FormDescription>
+                        Make this chatbot available to end users
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="allowedDomains"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Allowed Domains</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="example.com, app.example.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Comma-separated list of domains allowed to embed this
+                      chatbot. Leave empty to allow all.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </form>
         </Form>
       </CardContent>
@@ -413,11 +450,14 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
         <Button variant="outline" onClick={() => router.back()}>
           Cancel
         </Button>
-        <Button onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
+        <Button
+          onClick={form.handleSubmit(onSubmit)}
+          disabled={isSubmitting}
+        >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEdit ? "Update Assistant" : "Create Assistant"}
         </Button>
       </CardFooter>
     </Card>
   );
-} 
+}
