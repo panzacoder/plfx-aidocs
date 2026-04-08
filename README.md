@@ -79,7 +79,7 @@ You have two options to create a new v1 project:
 To create a new v1 project using our CLI tool, run:
 
 ```bash
-bun create @convex-dev/v1@latest
+pnpm create @convex-dev/v1@latest
 ```
 
 This command will guide you through the process of setting up your project, including:
@@ -98,7 +98,7 @@ After the setup is complete, you can start your development server by running:
 
 ```bash
 cd your-project-name
-bun dev
+pnpm dev
 ```
 
 ### Option 2: Manual Setup
@@ -108,14 +108,14 @@ If you prefer to set up the project manually, follow these steps:
 1. Clone the repository:
 
    ```bash
-   bunx degit get-convex/v1 v1
+   pnpm dlx degit get-convex/v1 v1
    cd v1
    ```
 
 2. Install dependencies:
 
    ```bash
-   bun install
+   pnpm install
    ```
 
 3. Initialize git repository:
@@ -154,23 +154,23 @@ If you prefer to set up the project manually, follow these steps:
 
    ```bash
    cd packages/backend
-   bunx convex run init
+   pnpm dlx convex run init
    ```
 
 9. Start the development server:
 
    ```bash
-   bun dev
+   pnpm dev
    ```
 
    This starts everything in development mode (web, app, api, email).
 
    Alternatively, you can start specific parts of the application:
 
-   - `bun dev:web`: starts the web app
-   - `bun dev:app`: starts the app
-   - `bun dev:convex`: starts the Convex API
-   - `bun dev:email`: starts the email app
+   - `pnpm dev:web`: starts the web app
+   - `pnpm dev:app`: starts the app
+   - `pnpm dev:convex`: starts the Convex API
+   - `pnpm dev:email`: starts the email app
 
 ## Detailed Service Setup Instructions
 

@@ -3,8 +3,6 @@
 import { UnsubscribeWarningModal } from "@/components/UnsubscribeWarningModal";
 import { useScopedI18n } from "@/locales/client";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useForm } from "@tanstack/react-form";
-import { zodValidator } from "@tanstack/zod-form-adapter";
 import { api } from "@v1/backend/convex/_generated/api";
 import type { Id } from "@v1/backend/convex/_generated/dataModel";
 import * as validators from "@v1/backend/convex/utils/validators";
@@ -12,10 +10,16 @@ import { Button } from "@v1/ui/button";
 import { Input } from "@v1/ui/input";
 import { UploadInput } from "@v1/ui/upload-input";
 import { useDoubleCheck } from "@v1/ui/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import type { UploadFileResponse } from "@xixixao/uploadstuff/react";
 import { useMutation, useQuery } from "convex/react";
 import { Upload } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+const usernameSchema = z.object({ username: validators.username });
+type UsernameValues = z.infer<typeof usernameSchema>;
 
 export default function DashboardSettings() {
   const t = useScopedI18n("settings");
@@ -31,6 +35,22 @@ export default function DashboardSettings() {
   const { doubleCheck, getButtonProps } = useDoubleCheck();
   const [isUnsubscribeModalOpen, setIsUnsubscribeModalOpen] = useState(false);
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<UsernameValues>({
+    resolver: zodResolver(usernameSchema),
+    defaultValues: { username: user?.username ?? "" },
+  });
+
+  useEffect(() => {
+    if (user?.username) {
+      reset({ username: user.username });
+    }
+  }, [user?.username, reset]);
+
   const handleUpdateUserImage = (uploaded: UploadFileResponse[]) => {
     return updateUserImage({
       imageId: (uploaded[0]?.response as { storageId: Id<"_storage"> })
@@ -39,7 +59,6 @@ export default function DashboardSettings() {
   };
 
   const handleDeleteAccount = async () => {
-    console.log(user?.subscription);
     if (
       user?.subscription?.status &&
       ["active", "incomplete"].includes(user.subscription.status) &&
@@ -54,19 +73,7 @@ export default function DashboardSettings() {
 
   const unsubscribeHref = `https://sandbox.polar.sh/purchases/subscriptions/${user?.subscription?.polarId}`;
 
-  const usernameForm = useForm({
-    validatorAdapter: zodValidator(),
-    defaultValues: {
-      username: user?.username,
-    },
-    onSubmit: async ({ value }) => {
-      await updateUsername({ username: value.username || "" });
-    },
-  });
-
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
     <div className="flex h-full w-full flex-col gap-6">
@@ -131,11 +138,9 @@ export default function DashboardSettings() {
       {/* Username */}
       <form
         className="flex w-full flex-col items-start rounded-lg border border-border bg-card"
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          usernameForm.handleSubmit();
-        }}
+        onSubmit={handleSubmit(async (values) => {
+          await updateUsername({ username: values.username });
+        })}
       >
         <div className="flex w-full flex-col gap-4 rounded-lg p-6">
           <div className="flex flex-col gap-2">
@@ -144,29 +149,20 @@ export default function DashboardSettings() {
               This is your username. It will be displayed on your profile.
             </p>
           </div>
-          <usernameForm.Field
-            name="username"
-            validators={{
-              onSubmit: validators.username,
-            }}
-            // biome-ignore lint/correctness/noChildrenProp: <explanation>
-            children={(field) => (
-              <Input
-                placeholder="Username"
-                autoComplete="off"
-                required
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-                className={`w-80 bg-transparent ${field.state.meta?.errors.length > 0 &&
-                  "border-destructive focus-visible:ring-destructive"
-                  }`}
-              />
-            )}
+          <Input
+            placeholder="Username"
+            autoComplete="off"
+            required
+            {...register("username")}
+            className={`w-80 bg-transparent ${
+              errors.username
+                ? "border-destructive focus-visible:ring-destructive"
+                : ""
+            }`}
           />
-          {usernameForm.state.fieldMeta.username?.errors.length > 0 && (
+          {errors.username && (
             <p className="text-sm text-destructive dark:text-destructive-foreground">
-              {usernameForm.state.fieldMeta.username?.errors.join(" ")}
+              {errors.username.message}
             </p>
           )}
         </div>

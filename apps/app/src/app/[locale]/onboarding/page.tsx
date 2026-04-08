@@ -1,48 +1,42 @@
 "use client";
 
-import { useForm } from "@tanstack/react-form";
-import { zodValidator } from "@tanstack/zod-form-adapter";
 import { api } from "@v1/backend/convex/_generated/api";
 import * as validators from "@v1/backend/convex/utils/validators";
 import { Button } from "@v1/ui/button";
 import { Input } from "@v1/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useFormStatus } from "react-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+const formSchema = z.object({ username: validators.username });
+type FormValues = z.infer<typeof formSchema>;
 
 export default function OnboardingUsername() {
   const user = useQuery(api.users.functions.getUser);
   const router = useRouter();
   const updateUsername = useMutation(api.users.functions.updateUsername);
 
-  const { pending } = useFormStatus();
-
-  const form = useForm({
-    validatorAdapter: zodValidator(),
-    defaultValues: {
-      username: "",
-    },
-    onSubmit: async ({ value }) => {
-      await updateUsername({
-        username: value.username,
-      });
-    },
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { username: "" },
   });
 
   useEffect(() => {
-    if (!user) {
-      return;
-    }
+    if (!user) return;
     if (user?.username && user?.subscription) {
       router.push("/");
     }
   }, [user]);
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const showSubscriptionPending = !!user.username;
 
@@ -70,49 +64,37 @@ export default function OnboardingUsername() {
       </div>
       <form
         className="flex w-full flex-col items-start gap-1"
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
+        onSubmit={handleSubmit(async (values) => {
+          await updateUsername({ username: values.username });
+        })}
       >
         <div className="flex w-full flex-col gap-1.5">
           <label htmlFor="username" className="sr-only">
             Username
           </label>
-          <form.Field
-            name="username"
-            validators={{
-              onSubmit: validators.username,
-            }}
-            // biome-ignore lint/correctness/noChildrenProp: tanstack best practice
-            children={(field) => (
-              <Input
-                placeholder="Username"
-                autoComplete="off"
-                required
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-                className={`bg-transparent ${
-                  field.state.meta?.errors.length > 0 &&
-                  "border-destructive focus-visible:ring-destructive"
-                }`}
-              />
-            )}
+          <Input
+            placeholder="Username"
+            autoComplete="off"
+            required
+            {...register("username")}
+            className={`bg-transparent ${
+              errors.username
+                ? "border-destructive focus-visible:ring-destructive"
+                : ""
+            }`}
           />
         </div>
 
         <div className="flex flex-col">
-          {form.state.fieldMeta.username?.errors.length > 0 && (
+          {errors.username && (
             <span className="mb-2 text-sm text-destructive dark:text-destructive-foreground">
-              {form.state.fieldMeta.username?.errors.join(" ")}
+              {errors.username.message}
             </span>
           )}
         </div>
 
         <Button type="submit" size="sm" className="w-full">
-          {pending ? <Loader2 className="animate-spin" /> : "Continue"}
+          {isSubmitting ? <Loader2 className="animate-spin" /> : "Continue"}
         </Button>
       </form>
 

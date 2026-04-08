@@ -13,7 +13,7 @@
     "start:app": "turbo start --filter=@v1/app",
     "test": "turbo test --parallel",
     "format": "biome format --write .",
-    "lint": "turbo lint && bun lint:repo",
+    "lint": "turbo lint && pnpm lint:repo",
     "lint:repo": "pnpm dlx sherif@latest",
     "lint:repo:fix": "pnpm dlx sherif@latest --fix",
     "typecheck": "turbo typecheck"
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.8.3",
-    "@t3-oss/env-nextjs": "^0.11.1",
+    "@t3-oss/env-nextjs": "^0.13.11",
     "@types/react": "^18",
     "chalk": "^4.1.2",
     "dotenv": "^16.4.5",
@@ -34,7 +34,7 @@
     "tsx": "^4.19.1",
     "turbo": "2.4.0",
     "typescript": "^5.5.4",
-    "zod": "^3.23.8"
+    "zod": "^4.3.6"
   },
   "packageManager": "pnpm@9.15.4"
 }
