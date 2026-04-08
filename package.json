@@ -11,7 +11,9 @@
     "dev:app": "turbo dev --filter=@v1/app",
     "start:web": "turbo start --filter=@v1/web",
     "start:app": "turbo start --filter=@v1/app",
-    "test": "turbo test --parallel",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "format": "biome format --write .",
     "lint": "turbo lint && pnpm lint:repo",
     "lint:repo": "pnpm dlx sherif@latest",
@@ -34,6 +36,11 @@
     "tsx": "^4.19.1",
     "turbo": "2.4.0",
     "typescript": "^5.5.4",
+    "vitest": "^3.2.1",
+    "@vitest/coverage-v8": "^3.2.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "jsdom": "^26.1.0",
     "zod": "^4.3.6"
   },
   "packageManager": "pnpm@9.15.4"

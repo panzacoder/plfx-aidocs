@@ -7,8 +7,6 @@ import {
   AssistantModel,
   FileModel,
   ThemeModel,
-  PlanModel,
-  SubscriptionModel,
 } from "./models";
 
 export default defineSchema({
@@ -16,29 +14,23 @@ export default defineSchema({
 
   users: defineTable(UserModel.fields)
     .index("email", ["email"])
-    .index("polarId", ["polarId"]),
-
-  plans: defineTable(PlanModel.fields)
-    .index("key", ["key"])
-    .index("polarProductId", ["polarProductId"]),
-
-  subscriptions: defineTable(SubscriptionModel.fields)
-    .index("userId", ["userId"])
-    .index("polarId", ["polarId"]),
+    .index("organizationId", ["organizationId"]),
 
   organizations: defineTable(OrganizationModel.fields)
-    .index("by_ownerId", ["ownerId"]),
+    .index("ownerId", ["ownerId"])
+    .index("polarCustomerId", ["polarCustomerId"])
+    .index("polarSubscriptionId", ["polarSubscriptionId"]),
 
   aiProviders: defineTable(AIProviderModel.fields)
-    .index("by_organizationId", ["organizationId"]),
+    .index("organizationId", ["organizationId"]),
 
   assistants: defineTable(AssistantModel.fields)
-    .index("by_organizationId", ["organizationId"])
-    .index("by_aiProviderId", ["aiProviderId"]),
+    .index("organizationId", ["organizationId"])
+    .index("aiProviderId", ["aiProviderId"]),
 
   files: defineTable(FileModel.fields)
-    .index("by_assistantId", ["assistantId"]),
+    .index("assistantId", ["assistantId"]),
 
   themes: defineTable(ThemeModel.fields)
-    .index("by_assistantId", ["assistantId"]),
+    .index("assistantId", ["assistantId"]),
 });

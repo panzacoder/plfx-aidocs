@@ -22,8 +22,9 @@ export const UserModel = defineZodModel("users", {
   isAnonymous: z.boolean().optional(),
   username: z.string().optional(),
   imageId: zx.id("_storage").optional(),
-  polarId: z.string().optional(),
-  polarSubscriptionPendingId: zx.id("_scheduled_functions").optional(),
+  // Organization membership
+  organizationId: zx.id("organizations").optional(),
+  role: z.enum(["owner", "admin", "member"]).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -33,6 +34,14 @@ export const OrganizationModel = defineZodModel("organizations", {
   name: z.string(),
   ownerId: zx.id("users"),
   members: z.array(zx.id("users")),
+  // Polar billing
+  polarCustomerId: z.string().optional(),
+  polarSubscriptionId: z.string().optional(),
+  subscriptionStatus: z.enum(["active", "canceled", "trialing", "none"]),
+  subscriptionPlan: z.string().optional(),
+  billingEmail: z.string().optional(),
+  billingName: z.string().optional(),
+  subscriptionUpdatedAt: z.number().optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -106,37 +115,3 @@ export const ThemeModel = defineZodModel("themes", {
   welcomeMessage: z.string().optional(),
 });
 
-// ---------------------------------------------------------------------------
-// Plans (billing)
-// ---------------------------------------------------------------------------
-const PriceSchema = z.object({
-  polarId: z.string(),
-  amount: z.number(),
-});
-
-export const PlanModel = defineZodModel("plans", {
-  key: z.enum(["free", "pro"]),
-  polarProductId: z.string(),
-  name: z.string(),
-  description: z.string(),
-  prices: z.object({
-    month: z.object({ usd: PriceSchema }).optional(),
-    year: z.object({ usd: PriceSchema }).optional(),
-  }),
-});
-
-// ---------------------------------------------------------------------------
-// Subscriptions (billing)
-// ---------------------------------------------------------------------------
-export const SubscriptionModel = defineZodModel("subscriptions", {
-  userId: zx.id("users"),
-  planId: zx.id("plans"),
-  polarId: z.string(),
-  polarPriceId: z.string(),
-  currency: z.enum(["usd", "eur"]),
-  interval: z.enum(["month", "year"]),
-  status: z.string(),
-  currentPeriodStart: z.number().optional(),
-  currentPeriodEnd: z.number().optional(),
-  cancelAtPeriodEnd: z.boolean().optional(),
-});

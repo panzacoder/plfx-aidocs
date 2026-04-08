@@ -103,7 +103,7 @@ export const listFiles = query({
 
     return await ctx.db
       .query("files")
-      .withIndex("by_assistantId", (q) =>
+      .withIndex("assistantId", (q) =>
         q.eq("assistantId", args.assistantId),
       )
       .collect();

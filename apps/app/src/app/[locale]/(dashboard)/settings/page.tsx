@@ -12,7 +12,7 @@ import { UploadInput } from "@v1/ui/upload-input";
 import { useDoubleCheck } from "@v1/ui/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { UploadFileResponse } from "@xixixao/uploadstuff/react";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -29,7 +29,7 @@ export default function DashboardSettings() {
   const updateUsername = useMutation(api.users.functions.updateUsername);
   const removeUserImage = useMutation(api.users.functions.removeUserImage);
   const generateUploadUrl = useMutation(api.users.functions.generateUploadUrl);
-  const deleteCurrentUserAccount = useMutation(
+  const deleteCurrentUserAccount = useAction(
     api.users.functions.deleteCurrentUserAccount,
   );
   const { doubleCheck, getButtonProps } = useDoubleCheck();
@@ -60,9 +60,7 @@ export default function DashboardSettings() {
 
   const handleDeleteAccount = async () => {
     if (
-      user?.subscription?.status &&
-      ["active", "incomplete"].includes(user.subscription.status) &&
-      !user.subscription.cancelAtPeriodEnd
+      user?.organization?.subscriptionStatus === "active"
     ) {
       setIsUnsubscribeModalOpen(true);
     } else {
@@ -71,7 +69,7 @@ export default function DashboardSettings() {
     }
   };
 
-  const unsubscribeHref = `https://sandbox.polar.sh/purchases/subscriptions/${user?.subscription?.polarId}`;
+  const unsubscribeHref = `https://sandbox.polar.sh/purchases/subscriptions/${user?.organization?.polarSubscriptionId}`;
 
   if (!user) return null;
 

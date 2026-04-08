@@ -55,7 +55,7 @@ export const listAIProviders = query({
 
     return await ctx.db
       .query("aiProviders")
-      .withIndex("by_organizationId", (q) =>
+      .withIndex("organizationId", (q) =>
         q.eq("organizationId", args.organizationId),
       )
       .collect();
@@ -116,7 +116,7 @@ export const deleteAIProvider = mutation({
     // Check if any assistants use this provider
     const assistants = await ctx.db
       .query("assistants")
-      .withIndex("by_aiProviderId", (q) =>
+      .withIndex("aiProviderId", (q) =>
         q.eq("aiProviderId", args.providerId),
       )
       .collect();

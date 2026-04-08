@@ -18,7 +18,7 @@ export default async function Layout({
     return redirect("/login");
   }
   const user = await fetchQuery(api.users.functions.getUser, {}, { token });
-  if (!user?.username || !user?.subscription) {
+  if (!user?.username || !user?.organization) {
     return redirect("/onboarding");
   }
   const preloadedUser = await preloadQuery(

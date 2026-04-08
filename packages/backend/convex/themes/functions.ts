@@ -10,7 +10,7 @@ export const getTheme = query({
   handler: async (ctx, args) => {
     const themes = await ctx.db
       .query("themes")
-      .withIndex("by_assistantId", (q) =>
+      .withIndex("assistantId", (q) =>
         q.eq("assistantId", args.assistantId),
       )
       .first();
@@ -65,7 +65,7 @@ export const upsertTheme = mutation({
     // Check for existing theme
     const existing = await ctx.db
       .query("themes")
-      .withIndex("by_assistantId", (q) =>
+      .withIndex("assistantId", (q) =>
         q.eq("assistantId", args.assistantId),
       )
       .first();

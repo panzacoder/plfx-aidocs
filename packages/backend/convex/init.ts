@@ -1,127 +1,54 @@
+"use node";
+
 import { Polar } from "@polar-sh/sdk";
-import { asyncMap } from "convex-helpers";
-import { internal } from "@/_generated/api";
-import { internalAction, internalMutation } from "@/_generated/server";
+import { internalAction } from "@/_generated/server";
 import { env } from "@/env";
-import schema from "@/schema";
-import { CURRENCIES, INTERVALS, PLANS } from "@/constants";
 
-type PlanKey = (typeof PLANS)[keyof typeof PLANS];
-
-const seedProducts = [
-  {
-    key: PLANS.FREE,
-    name: "Free",
-    description: "Some of the things, free forever.",
-    amountType: "free",
-    prices: {
-      [INTERVALS.MONTH]: {
-        [CURRENCIES.USD]: 0,
-      },
-    },
-  },
-  {
-    key: PLANS.PRO,
-    name: "Pro",
-    description: "All the things for one low monthly price.",
-    amountType: "fixed",
-    prices: {
-      [INTERVALS.MONTH]: {
-        [CURRENCIES.USD]: 2000,
-      },
-      [INTERVALS.YEAR]: {
-        [CURRENCIES.USD]: 20000,
-      },
-    },
-  },
-] as const;
-
-export const insertSeedPlan = internalMutation({
-  args: schema.tables.plans.validator,
-  handler: async (ctx, args) => {
-    await ctx.db.insert("plans", {
-      polarProductId: args.polarProductId,
-      key: args.key,
-      name: args.name,
-      description: args.description,
-      prices: args.prices,
-    });
-  },
-});
-
-export default internalAction(async (ctx) => {
-  /**
-   * Stripe Products.
-   */
+/**
+ * Seed Polar products if they don't already exist.
+ * Plans are now managed entirely in Polar — no local plans table.
+ */
+export default internalAction(async () => {
   const polar = new Polar({
     server: "sandbox",
     accessToken: env.POLAR_ACCESS_TOKEN,
   });
-  const products = await polar.products.list({
-    isArchived: false,
-  });
+
+  const products = await polar.products.list({ isArchived: false });
   if (products?.result?.items?.length) {
-    console.info("🏃‍♂️ Skipping Polar products creation and seeding.");
+    console.info("Polar products already exist, skipping seed.");
     return;
   }
 
-  await asyncMap(seedProducts, async (product) => {
-    // Create Polar product.
-    const polarProduct = await polar.products.create({
-      name: product.name,
-      description: product.description,
-      prices: Object.entries(product.prices).map(([interval, amount]) => ({
-        amountType: product.amountType,
-        priceAmount: amount.usd,
-        recurringInterval: interval,
-      })),
-    });
-    const monthPrice = polarProduct.prices.find(
-      (price) =>
-        price.type === "recurring" &&
-        price.recurringInterval === INTERVALS.MONTH,
-    );
-    const yearPrice = polarProduct.prices.find(
-      (price) =>
-        price.type === "recurring" &&
-        price.recurringInterval === INTERVALS.YEAR,
-    );
-
-    await ctx.runMutation(internal.init.insertSeedPlan, {
-      polarProductId: polarProduct.id,
-      key: product.key as PlanKey,
-      name: product.name,
-      description: product.description,
-      prices: {
-        ...(!monthPrice
-          ? {}
-          : {
-            month: {
-              usd: {
-                polarId: monthPrice?.id,
-                amount:
-                  monthPrice.amountType === "fixed"
-                    ? monthPrice.priceAmount
-                    : 0,
-              },
-            },
-          }),
-        ...(!yearPrice
-          ? {}
-          : {
-            year: {
-              usd: {
-                polarId: yearPrice?.id,
-                amount:
-                  yearPrice.amountType === "fixed"
-                    ? yearPrice.priceAmount
-                    : 0,
-              },
-            },
-          }),
+  // Create Free plan
+  await polar.products.create({
+    name: "Free",
+    description: "Basic access to the platform.",
+    prices: [
+      {
+        amountType: "free",
+        recurringInterval: "month",
       },
-    });
+    ],
   });
 
-  console.info("📦 Polar Products have been successfully created.");
+  // Create Pro plan
+  await polar.products.create({
+    name: "Pro",
+    description: "Full access to all features.",
+    prices: [
+      {
+        amountType: "fixed",
+        priceAmount: 2000,
+        recurringInterval: "month",
+      },
+      {
+        amountType: "fixed",
+        priceAmount: 20000,
+        recurringInterval: "year",
+      },
+    ],
+  });
+
+  console.info("Polar products created successfully.");
 });

@@ -18,7 +18,9 @@ type FormValues = z.infer<typeof formSchema>;
 export default function OnboardingUsername() {
   const user = useQuery(api.users.functions.getUser);
   const router = useRouter();
-  const updateUsername = useMutation(api.users.functions.updateUsername);
+  const completeOnboarding = useMutation(
+    api.users.onboarding.completeOnboarding,
+  );
 
   const {
     register,
@@ -31,25 +33,12 @@ export default function OnboardingUsername() {
 
   useEffect(() => {
     if (!user) return;
-    if (user?.username && user?.subscription) {
+    if (user?.username && user?.organization) {
       router.push("/");
     }
   }, [user]);
 
   if (!user) return null;
-
-  const showSubscriptionPending = !!user.username;
-
-  if (showSubscriptionPending) {
-    return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-center text-base font-normal text-primary/60">
-          Processing your subscription. This may take a moment...
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto flex h-full w-full max-w-96 flex-col items-center justify-center gap-6">
@@ -65,7 +54,7 @@ export default function OnboardingUsername() {
       <form
         className="flex w-full flex-col items-start gap-1"
         onSubmit={handleSubmit(async (values) => {
-          await updateUsername({ username: values.username });
+          await completeOnboarding({ username: values.username });
         })}
       >
         <div className="flex w-full flex-col gap-1.5">
@@ -94,7 +83,7 @@ export default function OnboardingUsername() {
         </div>
 
         <Button type="submit" size="sm" className="w-full">
-          {isSubmitting ? <Loader2 className="animate-spin" /> : "Continue"}
+          {isSubmitting ? <Loader2 className="animate-spin" /> : "Get Started"}
         </Button>
       </form>
 

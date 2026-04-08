@@ -77,7 +77,7 @@ export const listAssistants = query({
 
     return await ctx.db
       .query("assistants")
-      .withIndex("by_organizationId", (q) =>
+      .withIndex("organizationId", (q) =>
         q.eq("organizationId", args.organizationId),
       )
       .collect();
@@ -182,7 +182,7 @@ export const deleteAssistant = mutation({
     // Delete related files and their storage
     const files = await ctx.db
       .query("files")
-      .withIndex("by_assistantId", (q) =>
+      .withIndex("assistantId", (q) =>
         q.eq("assistantId", args.assistantId),
       )
       .collect();
@@ -195,7 +195,7 @@ export const deleteAssistant = mutation({
     // Delete related theme
     const themes = await ctx.db
       .query("themes")
-      .withIndex("by_assistantId", (q) =>
+      .withIndex("assistantId", (q) =>
         q.eq("assistantId", args.assistantId),
       )
       .collect();
