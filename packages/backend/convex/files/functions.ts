@@ -1,29 +1,9 @@
 import { v } from "convex/values";
-import { mutation, query, action } from "@/_generated/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { mutation, query } from "@/_generated/server";
 import { internal } from "../_generated/api";
-import { Files } from "./schema";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
-const fileValidator = v.object({
-  _id: v.id("files"),
-  _creationTime: v.number(),
-  assistantId: v.id("assistants"),
-  externalId: v.string(),
-  name: v.string(),
-  purpose: v.union(v.literal("assistants")),
-  size: v.number(),
-  type: v.string(),
-  status: v.union(
-    v.literal("uploading"),
-    v.literal("processing"),
-    v.literal("ready"),
-    v.literal("failed")
-  ),
-  metadata: v.optional(v.record(v.string(), v.string())),
-  lastUpdated: v.number(),
-});
-
-// Get presigned URL for file upload
+// Get presigned URL for file upload to Convex storage
 export const getUploadUrl = mutation({
   args: {
     assistantId: v.id("assistants"),
@@ -31,98 +11,84 @@ export const getUploadUrl = mutation({
     contentType: v.string(),
     fileSize: v.number(),
   },
-  returns: v.object({
-    uploadUrl: v.string(),
-    fileId: v.id("files"),
-  }),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
-    // Verify the assistant exists and user has access
     const assistant = await ctx.db.get(args.assistantId);
-    if (!assistant) {
-      throw new Error("Assistant not found");
-    }
+    if (!assistant) throw new Error("Assistant not found");
 
-    // Verify file size is within limits
-    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB limit
+    // Verify file size (20MB limit)
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
     if (args.fileSize > MAX_FILE_SIZE) {
-      throw new Error(`File too large, max size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
-    }
-
-    // Verify file extension is allowed
-    const allowedExtensions = [
-      ".pdf", ".txt", ".md", ".html", ".htm", ".csv", ".json", ".docx", ".doc", ".rtf", ".ppt", ".pptx"
-    ];
-    
-    const fileExtension = args.filename.toLowerCase().substring(args.filename.lastIndexOf('.'));
-    if (!allowedExtensions.includes(fileExtension)) {
       throw new Error(
-        `File type not supported. Allowed extensions: ${allowedExtensions.join(", ")}`
+        `File too large, max size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`,
       );
     }
 
-    // Create a record for the file
-    const fileId = await ctx.db.insert("files", {
-      assistantId: args.assistantId,
-      externalId: "",
-      name: args.filename,
-      purpose: "assistants",
-      size: args.fileSize,
-      type: args.contentType,
-      status: "uploading",
-      lastUpdated: Date.now(),
-    });
+    // Verify file extension
+    const allowedExtensions = [
+      ".pdf",
+      ".txt",
+      ".md",
+      ".html",
+      ".htm",
+      ".csv",
+      ".json",
+      ".docx",
+      ".doc",
+      ".rtf",
+    ];
+    const ext = args.filename
+      .toLowerCase()
+      .substring(args.filename.lastIndexOf("."));
+    if (!allowedExtensions.includes(ext)) {
+      throw new Error(
+        `File type not supported. Allowed: ${allowedExtensions.join(", ")}`,
+      );
+    }
 
-    // Generate a presigned URL for the file upload
-    const uploadUrl = await ctx.storage.generateUploadUrl(
-      `${fileId}-${args.filename}`,
-      { 
-        contentType: args.contentType,
-        expireAfterMs: 15 * 60 * 1000 // 15 minutes
-      }
-    );
+    // Generate upload URL
+    const uploadUrl = await ctx.storage.generateUploadUrl();
 
-    return {
-      uploadUrl,
-      fileId,
-    };
+    return { uploadUrl };
   },
 });
 
-// Confirm file upload and process it (upload to OpenAI)
+// Confirm upload and create file record, then schedule RAG ingestion
 export const processUploadedFile = mutation({
   args: {
-    fileId: v.id("files"),
+    assistantId: v.id("assistants"),
+    storageId: v.id("_storage"),
+    filename: v.string(),
+    contentType: v.string(),
+    fileSize: v.number(),
   },
-  returns: fileValidator,
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
-    // Get the file record
-    const file = await ctx.db.get(args.fileId);
-    if (!file) {
-      throw new Error("File not found");
-    }
+    const assistant = await ctx.db.get(args.assistantId);
+    if (!assistant) throw new Error("Assistant not found");
 
-    // Update the file status to processing
-    await ctx.db.patch(args.fileId, {
+    // Create file record
+    const fileId = await ctx.db.insert("files", {
+      assistantId: args.assistantId,
+      storageId: args.storageId,
+      name: args.filename,
+      size: args.fileSize,
+      type: args.contentType,
       status: "processing",
-      lastUpdated: Date.now(),
     });
 
-    // Schedule an action to upload the file to OpenAI
-    await ctx.scheduler.runAfter(0, internal.files.actions.uploadFileToOpenAI, {
-      fileId: args.fileId,
-    });
+    // Schedule RAG ingestion
+    await ctx.scheduler.runAfter(
+      0,
+      internal.files.actions.ingestFileToRAG,
+      { fileId },
+    );
 
-    return await ctx.db.get(args.fileId);
+    return await ctx.db.get(fileId);
   },
 });
 
@@ -131,26 +97,16 @@ export const listFiles = query({
   args: {
     assistantId: v.id("assistants"),
   },
-  returns: v.array(fileValidator),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
-    // Verify the assistant exists and user has access
-    const assistant = await ctx.db.get(args.assistantId);
-    if (!assistant) {
-      throw new Error("Assistant not found");
-    }
-
-    // Retrieve the files
-    const files = await ctx.db
+    return await ctx.db
       .query("files")
-      .withIndex("by_assistantId", (q) => q.eq("assistantId", args.assistantId))
+      .withIndex("by_assistantId", (q) =>
+        q.eq("assistantId", args.assistantId),
+      )
       .collect();
-
-    return files;
   },
 });
 
@@ -159,78 +115,35 @@ export const getFile = query({
   args: {
     fileId: v.id("files"),
   },
-  returns: v.union(fileValidator, v.null()),
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
-
-    const file = await ctx.db.get(args.fileId);
-    if (!file) {
-      return null;
-    }
-
-    // Verify the assistant exists and user has access
-    const assistant = await ctx.db.get(file.assistantId);
-    if (!assistant) {
-      throw new Error("Assistant not found");
-    }
-
-    return file;
+    return await ctx.db.get(args.fileId);
   },
 });
 
-// Delete a file
+// Delete a file (from storage + RAG + DB)
 export const deleteFile = mutation({
   args: {
     fileId: v.id("files"),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
     const file = await ctx.db.get(args.fileId);
-    if (!file) {
-      return null;
-    }
+    if (!file) return null;
 
-    // Verify the assistant exists and user has access
-    const assistant = await ctx.db.get(file.assistantId);
-    if (!assistant) {
-      throw new Error("Assistant not found");
-    }
+    // Delete from Convex storage
+    await ctx.storage.delete(file.storageId);
 
-    // If the file has an external ID, schedule deletion from OpenAI
-    if (file.externalId) {
-      // First, remove it from the assistant if it's attached
-      if (assistant.fileIds.includes(file.externalId)) {
-        await ctx.scheduler.runAfter(0, internal.assistants.actions.removeFileFromAssistant, {
-          assistantId: file.assistantId,
-          fileId: file.externalId,
-        });
-      }
+    // Schedule RAG cleanup
+    await ctx.scheduler.runAfter(
+      0,
+      internal.files.actions.removeFileFromRAG,
+      { fileId: args.fileId, assistantId: file.assistantId },
+    );
 
-      // Then delete the file from OpenAI
-      await ctx.scheduler.runAfter(0, internal.files.actions.deleteFileFromOpenAI, {
-        fileId: args.fileId,
-      });
-    }
-
-    // Remove the file from Convex storage
-    if (file.name) {
-      try {
-        await ctx.storage.delete(`${file._id}-${file.name}`);
-      } catch (e) {
-        console.error("Error deleting file from storage:", e);
-      }
-    }
-
-    // Delete the file record
+    // Delete file record
     await ctx.db.delete(args.fileId);
     return null;
   },
-}); 
+});

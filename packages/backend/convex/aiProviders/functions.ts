@@ -2,41 +2,43 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query } from "@/_generated/server";
 
-const aiProviderValidator = v.object({
-  _id: v.id("aiProviders"),
-  _creationTime: v.number(),
-  organizationId: v.id("organizations"),
-  type: v.literal("OpenAI"),
-  apiKey: v.string(),
-});
+// Helper to verify org membership
+async function verifyOrgAccess(
+  ctx: { db: any },
+  organizationId: any,
+  userId: any,
+) {
+  const org = await ctx.db.get(organizationId);
+  if (!org) throw new Error("Organization not found");
+  if (
+    org.ownerId.toString() !== userId.toString() &&
+    !org.members.includes(userId)
+  ) {
+    throw new Error("Access denied to this organization");
+  }
+  return org;
+}
 
 // Create a new AI provider
 export const createAIProvider = mutation({
   args: {
     organizationId: v.id("organizations"),
     apiKey: v.string(),
+    provider: v.optional(v.union(v.literal("openai"))),
   },
-  returns: aiProviderValidator,
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
-    // TODO: Add organization membership check here
+    await verifyOrgAccess(ctx, args.organizationId, userId);
 
-    const aiProvider = await ctx.db.insert("aiProviders", {
+    const id = await ctx.db.insert("aiProviders", {
       organizationId: args.organizationId,
-      type: "OpenAI" as const,
+      provider: args.provider ?? "openai",
       apiKey: args.apiKey,
     });
 
-    const result = await ctx.db.get(aiProvider);
-    if (!result) {
-      throw new Error("Failed to create AI Provider");
-    }
-
-    return result;
+    return await ctx.db.get(id);
   },
 });
 
@@ -45,23 +47,18 @@ export const listAIProviders = query({
   args: {
     organizationId: v.id("organizations"),
   },
-  returns: v.array(aiProviderValidator),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
-    // TODO: Add organization membership check here
+    await verifyOrgAccess(ctx, args.organizationId, userId);
 
-    const providers = await ctx.db
+    return await ctx.db
       .query("aiProviders")
       .withIndex("by_organizationId", (q) =>
         q.eq("organizationId", args.organizationId),
       )
       .collect();
-
-    return providers;
   },
 });
 
@@ -70,20 +67,14 @@ export const getAIProvider = query({
   args: {
     providerId: v.id("aiProviders"),
   },
-  returns: v.union(aiProviderValidator, v.null()),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
     const provider = await ctx.db.get(args.providerId);
-    if (!provider) {
-      return null;
-    }
+    if (!provider) return null;
 
-    // TODO: Add organization membership check here
-
+    await verifyOrgAccess(ctx, provider.organizationId, userId);
     return provider;
   },
 });
@@ -94,30 +85,17 @@ export const updateAIProvider = mutation({
     providerId: v.id("aiProviders"),
     apiKey: v.string(),
   },
-  returns: aiProviderValidator,
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
     const provider = await ctx.db.get(args.providerId);
-    if (!provider) {
-      throw new Error("AI Provider not found");
-    }
+    if (!provider) throw new Error("AI Provider not found");
 
-    // TODO: Add organization membership check here
+    await verifyOrgAccess(ctx, provider.organizationId, userId);
 
-    await ctx.db.patch(args.providerId, {
-      apiKey: args.apiKey,
-    });
-
-    const result = await ctx.db.get(args.providerId);
-    if (!result) {
-      throw new Error("Failed to update AI Provider");
-    }
-
-    return result;
+    await ctx.db.patch(args.providerId, { apiKey: args.apiKey });
+    return await ctx.db.get(args.providerId);
   },
 });
 
@@ -126,21 +104,16 @@ export const deleteAIProvider = mutation({
   args: {
     providerId: v.id("aiProviders"),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    if (!userId) throw new Error("Not authenticated");
 
     const provider = await ctx.db.get(args.providerId);
-    if (!provider) {
-      throw new Error("AI Provider not found");
-    }
+    if (!provider) throw new Error("AI Provider not found");
 
-    // TODO: Add organization membership check here
+    await verifyOrgAccess(ctx, provider.organizationId, userId);
 
-    // Check if there are any assistants using this provider
+    // Check if any assistants use this provider
     const assistants = await ctx.db
       .query("assistants")
       .withIndex("by_aiProviderId", (q) =>
