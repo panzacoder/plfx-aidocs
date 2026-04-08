@@ -1,6 +1,6 @@
 "use node";
 
-import { action, query } from "@/_generated/server";
+import { action } from "@/_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "@/_generated/api";
 import { Polar } from "@polar-sh/sdk";
@@ -124,32 +124,5 @@ export const cancelOrganizationSubscription = action({
       console.error("Error cancelling subscription:", error);
       return { success: false, error: "Failed to cancel subscription" };
     }
-  },
-});
-
-// Check if organization has access to a feature
-export const hasFeatureAccess = query({
-  args: {
-    organizationId: v.id("organizations"),
-    featureKey: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const org = await ctx.db.get(args.organizationId);
-    if (!org || org.subscriptionStatus !== "active") return false;
-
-    const planFeatures: Record<string, string[]> = {
-      free: ["basic_access"],
-      pro: ["basic_access", "advanced_features", "support"],
-      enterprise: [
-        "basic_access",
-        "advanced_features",
-        "support",
-        "dedicated_support",
-        "custom_integrations",
-      ],
-    };
-
-    const plan = org.subscriptionPlan || "free";
-    return planFeatures[plan]?.includes(args.featureKey) || false;
   },
 });

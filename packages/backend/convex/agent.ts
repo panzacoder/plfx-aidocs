@@ -24,10 +24,10 @@ export const rag = new RAG(components.rag, {
 const searchDocuments = createTool({
   description:
     "Search through the organization's uploaded documents (policies, regulations, guidelines) to find relevant information for answering the user's question.",
-  args: z.object({
+  inputSchema: z.object({
     query: z.string().describe("Describe what information you are looking for"),
   }),
-  handler: async (ctx, { query }, { metadata }) => {
+  execute: async (ctx, { query }, { metadata }) => {
     const namespace = metadata?.ragNamespace as string | undefined;
     if (!namespace) return "No documents have been uploaded for this assistant.";
 

@@ -1,10 +1,11 @@
 /**
  * Zodvex model definitions for all custom tables.
  *
- * These are the source of truth for table shapes. The Convex schema in
- * schema.ts is derived from these models via defineZodModel + zodToConvexFields.
+ * These are the source of truth for table shapes and indexes.
+ * The Convex schema in schema.ts uses defineZodSchema to derive
+ * the Convex schema from these models.
  *
- * Client-safe — these can be imported from React code for form validation.
+ * Client-safe — can be imported from React code for form validation.
  */
 import { z } from "zod";
 import { zx, defineZodModel } from "zodvex/core";
@@ -22,10 +23,11 @@ export const UserModel = defineZodModel("users", {
   isAnonymous: z.boolean().optional(),
   username: z.string().optional(),
   imageId: zx.id("_storage").optional(),
-  // Organization membership
   organizationId: zx.id("organizations").optional(),
   role: z.enum(["owner", "admin", "member"]).optional(),
-});
+})
+  .index("email", ["email"])
+  .index("organizationId", ["organizationId"]);
 
 // ---------------------------------------------------------------------------
 // Organizations
@@ -34,7 +36,6 @@ export const OrganizationModel = defineZodModel("organizations", {
   name: z.string(),
   ownerId: zx.id("users"),
   members: z.array(zx.id("users")),
-  // Polar billing
   polarCustomerId: z.string().optional(),
   polarSubscriptionId: z.string().optional(),
   subscriptionStatus: z.enum(["active", "canceled", "trialing", "none"]),
@@ -42,7 +43,10 @@ export const OrganizationModel = defineZodModel("organizations", {
   billingEmail: z.string().optional(),
   billingName: z.string().optional(),
   subscriptionUpdatedAt: z.number().optional(),
-});
+})
+  .index("ownerId", ["ownerId"])
+  .index("polarCustomerId", ["polarCustomerId"])
+  .index("polarSubscriptionId", ["polarSubscriptionId"]);
 
 // ---------------------------------------------------------------------------
 // AI Providers
@@ -51,7 +55,7 @@ export const AIProviderModel = defineZodModel("aiProviders", {
   organizationId: zx.id("organizations"),
   provider: z.enum(["openai"]),
   apiKey: z.string(),
-});
+}).index("organizationId", ["organizationId"]);
 
 // ---------------------------------------------------------------------------
 // Assistants
@@ -59,35 +63,23 @@ export const AIProviderModel = defineZodModel("aiProviders", {
 export const AssistantModel = defineZodModel("assistants", {
   organizationId: zx.id("organizations"),
   aiProviderId: zx.id("aiProviders").optional(),
-
-  // Identity
   name: z.string(),
   description: z.string().optional(),
   instructions: z.string().optional(),
-
-  // Chat behavior
   initialPrompt: z.string().optional(),
   disclaimer: z.string().optional(),
   mode: z.enum(["open", "restricted"]),
   restrictedResponse: z.string().optional(),
-
-  // LLM config
-  model: z.string(), // e.g. "gpt-4o", "gpt-4o-mini"
-
-  // Publishing
+  model: z.string(),
   isPublic: z.boolean(),
   allowedDomains: z.array(z.string()),
   passwordHash: z.string().optional(),
-
-  // Theme
   themeId: zx.id("themes").optional(),
-
-  // RAG
   ragNamespace: z.string().optional(),
-
-  // Status
   status: z.enum(["draft", "ready", "error"]),
-});
+})
+  .index("organizationId", ["organizationId"])
+  .index("aiProviderId", ["aiProviderId"]);
 
 // ---------------------------------------------------------------------------
 // Files (documents uploaded for RAG ingestion)
@@ -97,9 +89,9 @@ export const FileModel = defineZodModel("files", {
   storageId: zx.id("_storage"),
   name: z.string(),
   size: z.number(),
-  type: z.string(), // MIME type
+  type: z.string(),
   status: z.enum(["uploading", "processing", "ready", "failed"]),
-});
+}).index("assistantId", ["assistantId"]);
 
 // ---------------------------------------------------------------------------
 // Themes
@@ -113,5 +105,4 @@ export const ThemeModel = defineZodModel("themes", {
   fontFamily: z.string().optional(),
   logoId: zx.id("_storage").optional(),
   welcomeMessage: z.string().optional(),
-});
-
+}).index("assistantId", ["assistantId"]);
