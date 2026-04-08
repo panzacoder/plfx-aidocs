@@ -36,9 +36,8 @@ export function Navigation({
   const router = useRouter();
   const isDashboardPath = pathname === "/";
   const isPublishPath = pathname === "/publish";
+  const isThreadsPath = pathname.startsWith("/threads");
   const isSettingsPath = pathname.startsWith("/settings");
-
-  console.log({ isSettingsPath });
 
   const user = usePreloadedQuery(preloadedUser);
 
@@ -217,6 +216,22 @@ export function Navigation({
             )}
           >
             Publish
+          </Link>
+        </div>
+
+        <div
+          className={cn(
+            "flex h-12 items-center border-b-2",
+            isThreadsPath ? "border-primary" : "border-transparent",
+          )}
+        >
+          <Link
+            href="/threads"
+            className={cn(
+              `${buttonVariants({ variant: "ghost", size: "sm" })} text-primary/80`,
+            )}
+          >
+            Threads
           </Link>
         </div>
 
