@@ -26,4 +26,45 @@ export const updateFile = internalMutation({
     await ctx.db.patch(args.fileId, updateFields);
     return await ctx.db.get(args.fileId);
   },
+});
+
+// Get a file by ID (internal use only)
+export const getFile = internalQuery({
+  args: {
+    fileId: v.id("files"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.fileId);
+  },
+});
+
+// Update file with storage ID after upload
+export const updateFileWithStorageId = internalMutation({
+  args: {
+    assistantId: v.id("assistants"),
+    filename: v.string(),
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    // Find the file record by assistant and filename
+    const file = await ctx.db
+      .query("files")
+      .withIndex("by_assistant", (q) => q.eq("assistantId", args.assistantId))
+      .filter((q) => q.eq(q.field("name"), args.filename))
+      .filter((q) => q.eq(q.field("status"), "uploading"))
+      .first();
+
+    if (!file) {
+      throw new Error("File record not found or already processed");
+    }
+
+    // Update the file record with storage ID and mark as processing
+    await ctx.db.patch(file._id, {
+      storageId: args.storageId,
+      status: "processing",
+      lastUpdated: Date.now(),
+    });
+
+    return file._id;
+  },
 }); 

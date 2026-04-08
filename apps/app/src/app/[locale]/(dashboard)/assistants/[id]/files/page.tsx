@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@v1/backend/convex/_generated/api";
 import { Id } from "@v1/backend/convex/_generated/dataModel";
-import { FileManager } from "../../../../_components/assistants/file-manager";
+import { FileManager } from "../../../_components/assistants/file-manager";
 import { Skeleton } from "@v1/ui/skeleton";
 import { Card, CardContent } from "@v1/ui/card";
 import { AlertCircle } from "lucide-react";

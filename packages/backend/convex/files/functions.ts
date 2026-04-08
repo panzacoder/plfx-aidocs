@@ -19,6 +19,7 @@ const fileValidator = v.object({
     v.literal("ready"),
     v.literal("failed")
   ),
+  storageId: v.optional(v.id("_storage")),
   metadata: v.optional(v.record(v.string(), v.string())),
   lastUpdated: v.number(),
 });
@@ -78,13 +79,7 @@ export const getUploadUrl = mutation({
     });
 
     // Generate a presigned URL for the file upload
-    const uploadUrl = await ctx.storage.generateUploadUrl(
-      `${fileId}-${args.filename}`,
-      { 
-        contentType: args.contentType,
-        expireAfterMs: 15 * 60 * 1000 // 15 minutes
-      }
-    );
+    const uploadUrl = await ctx.storage.generateUploadUrl();
 
     return {
       uploadUrl,
@@ -97,6 +92,7 @@ export const getUploadUrl = mutation({
 export const processUploadedFile = mutation({
   args: {
     fileId: v.id("files"),
+    storageId: v.id("_storage"),
   },
   returns: fileValidator,
   handler: async (ctx, args) => {
@@ -111,9 +107,10 @@ export const processUploadedFile = mutation({
       throw new Error("File not found");
     }
 
-    // Update the file status to processing
+    // Update the file status to processing and save storage ID
     await ctx.db.patch(args.fileId, {
       status: "processing",
+      storageId: args.storageId,
       lastUpdated: Date.now(),
     });
 
@@ -221,9 +218,9 @@ export const deleteFile = mutation({
     }
 
     // Remove the file from Convex storage
-    if (file.name) {
+    if (file.storageId) {
       try {
-        await ctx.storage.delete(`${file._id}-${file.name}`);
+        await ctx.storage.delete(file.storageId);
       } catch (e) {
         console.error("Error deleting file from storage:", e);
       }

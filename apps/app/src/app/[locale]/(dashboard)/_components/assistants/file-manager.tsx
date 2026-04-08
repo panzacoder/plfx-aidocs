@@ -107,7 +107,7 @@ export function FileManager({ assistantId }: FileManagerProps) {
         ]);
 
         try {
-          // Get upload URL from Convex
+          // Create file record first to reserve the entry
           const { uploadUrl, fileId } = await getUploadUrl({
             assistantId,
             filename: file.name,
@@ -124,9 +124,12 @@ export function FileManager({ assistantId }: FileManagerProps) {
             )
           );
 
-          // Upload the file to Convex Storage
+          // Use the CORS-enabled proxy endpoint
+          const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+          const uploadEndpoint = `${convexUrl}/upload-proxy`;
+
           const xhr = new XMLHttpRequest();
-          xhr.open("PUT", uploadUrl, true);
+          xhr.open("PUT", uploadEndpoint, true);
           xhr.setRequestHeader("Content-Type", file.type);
 
           xhr.upload.onprogress = (event) => {
@@ -142,38 +145,66 @@ export function FileManager({ assistantId }: FileManagerProps) {
 
           xhr.onload = async () => {
             if (xhr.status === 200) {
-              // File uploaded successfully, update status to 'processing'
-              setUploads((prev) =>
-                prev.map((upload) =>
-                  upload.id === uploadId
-                    ? { ...upload, progress: 100, status: "processing" }
-                    : upload
-                )
-              );
+              try {
+                const response = JSON.parse(xhr.responseText);
+                const storageId = response.storageId;
+                
+                if (!storageId) {
+                  throw new Error("No storage ID returned from upload");
+                }
 
-              // Process the file (upload to OpenAI)
-              await processUploadedFile({ fileId });
+                // File uploaded successfully, update status to 'processing'
+                setUploads((prev) =>
+                  prev.map((upload) =>
+                    upload.id === uploadId
+                      ? { ...upload, progress: 100, status: "processing" }
+                      : upload
+                  )
+                );
 
-              // Update status to 'success'
-              setUploads((prev) =>
-                prev.map((upload) =>
-                  upload.id === uploadId
-                    ? { ...upload, status: "success" }
-                    : upload
-                )
-              );
+                // Process the file (upload to OpenAI)
+                await processUploadedFile({ fileId, storageId });
 
-              toast({
-                title: "File uploaded successfully",
-                description: `${file.name} has been uploaded and is being processed.`,
-              });
+                // Update status to 'success'
+                setUploads((prev) =>
+                  prev.map((upload) =>
+                    upload.id === uploadId
+                      ? { ...upload, status: "success" }
+                      : upload
+                  )
+                );
 
-              // Refresh the file list
-              setTimeout(() => {
-                router.refresh();
-              }, 5000);
+                toast({
+                  title: "File uploaded successfully",
+                  description: `${file.name} has been uploaded and is being processed.`,
+                });
+
+                // Refresh the file list
+                setTimeout(() => {
+                  router.refresh();
+                }, 2000);
+              } catch (error) {
+                console.error("Error processing upload response:", error);
+                setUploads((prev) =>
+                  prev.map((upload) =>
+                    upload.id === uploadId
+                      ? {
+                          ...upload,
+                          status: "error",
+                          error: error.message || "Failed to process upload",
+                        }
+                      : upload
+                  )
+                );
+              }
             } else {
-              throw new Error(`Upload failed with status ${xhr.status}`);
+              let errorMessage = `Upload failed with status ${xhr.status}`;
+              try {
+                const errorResponse = JSON.parse(xhr.responseText);
+                errorMessage = errorResponse.error || errorMessage;
+              } catch {}
+
+              throw new Error(errorMessage);
             }
           };
 
@@ -184,7 +215,7 @@ export function FileManager({ assistantId }: FileManagerProps) {
                   ? {
                       ...upload,
                       status: "error",
-                      error: "An error occurred during upload",
+                      error: "Network error occurred during upload",
                     }
                   : upload
               )

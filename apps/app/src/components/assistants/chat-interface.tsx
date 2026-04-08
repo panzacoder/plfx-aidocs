@@ -69,17 +69,23 @@ export function ChatInterface({
     }
   };
 
-  // Render chat message with text smoothing
+  // Render chat message with optimized text smoothing for agent responses
   const renderMessage = (message: Message) => {
     const isUser = message.role === "user";
+    const isSystem = message.role === "system";
     
-    // Apply smooth text for streaming assistant messages with enhanced configuration
-    const content = isUser 
+    // Apply enhanced smooth text for streaming assistant messages
+    const content = (isUser || isSystem)
       ? message.content 
       : useSmoothText(message.content, message.isStreaming || false, {
-          initialCharsPerSecond: 25, // Adjust for desired speed
-          adaptiveSpeed: true,       // Adapt to actual streaming speed
+          initialCharsPerSecond: 30, // Slightly faster for better UX
+          adaptiveSpeed: true,        // Adapt to actual streaming speed
+          minSpeed: 15,              // Minimum readable speed
+          maxSpeed: 80,              // Maximum speed to maintain readability
         });
+    
+    // Don't render system messages or empty content
+    if (isSystem || !content.trim()) return null;
     
     return (
       <div 
@@ -91,34 +97,38 @@ export function ChatInterface({
       >
         <div
           className={cn(
-            "flex gap-3 max-w-[80%]",
+            "flex gap-3 max-w-[85%]", // Slightly wider for better content display
             isUser ? "flex-row-reverse" : "flex-row"
           )}
         >
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-8 w-8 shrink-0">
             {isUser ? (
-              <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center text-sm">
+              <div className="bg-primary text-primary-foreground h-full w-full flex items-center justify-center text-sm font-medium">
                 U
               </div>
             ) : (
-              <div className="bg-secondary text-secondary-foreground h-full w-full flex items-center justify-center text-sm">
-                A
+              <div className="bg-secondary text-secondary-foreground h-full w-full flex items-center justify-center text-sm font-medium">
+                AI
               </div>
             )}
           </Avatar>
           
           <div
             className={cn(
-              "rounded-lg px-4 py-3 text-sm",
+              "rounded-lg px-4 py-3 text-sm min-w-0", // min-w-0 for proper text wrapping
               isUser
                 ? "bg-primary text-primary-foreground"
-                : "bg-muted"
+                : "bg-muted",
+              message.isStreaming && "border-2 border-primary/20" // Visual indicator for streaming
             )}
           >
-            <div className="prose prose-sm dark:prose-invert max-w-none">
+            <div className="prose prose-sm dark:prose-invert max-w-none break-words">
               <Markdown>{content}</Markdown>
               {message.isStreaming && (
-                <span className="inline-block w-1.5 h-4 ml-0.5 bg-current animate-pulse" />
+                <span 
+                  className="inline-block w-1.5 h-4 ml-1 bg-current animate-pulse rounded-sm"
+                  aria-label="Typing indicator"
+                />
               )}
             </div>
           </div>
@@ -147,8 +157,12 @@ export function ChatInterface({
           
           {/* Error message */}
           {error && (
-            <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg mb-4">
-              Error: {error}
+            <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-lg mb-4 flex items-center gap-2">
+              <div className="h-2 w-2 bg-destructive rounded-full shrink-0" />
+              <div>
+                <div className="font-medium">Message failed to send</div>
+                <div className="text-xs opacity-80">{typeof error === 'string' ? error : 'Please try again'}</div>
+              </div>
             </div>
           )}
           

@@ -24,7 +24,7 @@ import { useToast } from "@v1/ui/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@v1/ui/card";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
-// Define form schema with simplified options for non-technical users
+// Define form schema aligned with backend agent schema
 const formSchema = z.object({
   // Required name field
   name: z.string().min(1, { message: "Name is required" }),
@@ -32,14 +32,18 @@ const formSchema = z.object({
   description: z.string().optional(),
   // Instructions for the assistant's behavior
   instructions: z.string().optional(),
-  // Hidden fields with defaults
-  model: z.enum(["gpt-4o"]).default("gpt-4o"),
-  tools: z.array(z.enum(["retrieval"])).default(["retrieval"]),
+  // Initial conversation starter
   initialPrompt: z.string().optional(),
-  // These fields will be added during form submission
-  // fileIds: z.array(z.string()).default([]),
-  // status: z.enum(["creating", "ready", "failed"]).default("creating"),
-  // mode: z.enum(["open", "restricted"]).default("open"),
+  // User-facing disclaimer
+  disclaimer: z.string().optional(),
+  // Model selection (defaults to most capable)
+  model: z.enum(["gpt-4o", "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"]).default("gpt-4o"),
+  // Tools available to the assistant
+  tools: z.array(z.enum(["retrieval", "code_interpreter", "function"])).default(["retrieval"]),
+  // Assistant mode
+  mode: z.enum(["open", "restricted"]).default("open"),
+  // Response when in restricted mode
+  restrictedResponse: z.string().optional(),
 });
 
 interface AssistantFormProps {
@@ -47,13 +51,12 @@ interface AssistantFormProps {
   assistant?: {
     _id: Id<"assistants">;
     name?: string;
-    model: "gpt-4o";
+    model: "gpt-4o" | "gpt-4-turbo-preview" | "gpt-4" | "gpt-3.5-turbo";
     instructions?: string;
     description?: string;
     initialPrompt?: string;
     disclaimer?: string;
     tools: string[];
-    // Legacy fields included for backwards compatibility
     mode?: "open" | "restricted";
     restrictedResponse?: string;
   };
@@ -72,23 +75,29 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
   // Default system prompt for new assistants
   const defaultSystemPrompt = "You are a helpful assistant that provides accurate and concise information. You can search through documents to find relevant information. When you don't know something, be honest about it.";
 
-  // Initialize form with assistant data or simplified defaults
+  // Initialize form with assistant data or defaults optimized for agent
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: assistant ? {
       name: assistant.name || "",
-      model: "gpt-4o", // Always use the most capable model
+      model: assistant.model || "gpt-4o",
       instructions: assistant.instructions || "",
       description: assistant.description || "",
       initialPrompt: assistant.initialPrompt || "",
-      tools: ["retrieval"],
+      disclaimer: assistant.disclaimer || "",
+      tools: (assistant.tools?.length > 0 ? assistant.tools : ["retrieval"]) as ("retrieval" | "code_interpreter" | "function")[],
+      mode: assistant.mode || "open",
+      restrictedResponse: assistant.restrictedResponse || "",
     } : {
       name: "",
       model: "gpt-4o",
       instructions: "",
       description: "",
       initialPrompt: "",
+      disclaimer: "",
       tools: ["retrieval"],
+      mode: "open",
+      restrictedResponse: "",
     },
   });
 
@@ -97,19 +106,14 @@ export function AssistantForm({ organizationId, assistant }: AssistantFormProps)
     setError(null);
     
     try {
-      // Add defaults for simplified form
+      // Prepare assistant data with agent-optimized defaults
       const assistantData = {
         ...values,
-        // Set default mode to open (unrestricted)
-        mode: "open",
-        // Always use retrieval tool
-        tools: ["retrieval"] as ["retrieval"],
         // Use instructions as provided or default if empty
         instructions: values.instructions || defaultSystemPrompt,
         // Initialize empty fileIds array (required by server)
         fileIds: [],
-        // Set initial status (required by server)
-        status: "creating" as const,
+        // Note: Status is managed by the backend, not needed in frontend
       };
       
       if (isEdit && assistant) {

@@ -13,7 +13,22 @@
       "Bash(pnpm add:*)",
       "WebFetchTool(domain:github.com)",
       "WebFetchTool(domain:stack.convex.dev)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npx convex env:*)",
+      "WebFetch(domain:docs.convex.dev)",
+      "Skill(superpowers:brainstorming)",
+      "Bash(tree:*)",
+      "WebSearch",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:ai-sdk.dev)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm view:*)",
+      "Bash(pnpm view:*)",
+      "Bash(npm info:*)",
+      "Bash(pnpm typecheck:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:platform.openai.com)",
+      "Bash(pnpm list:*)"
     ]
   },
   "enableAllProjectMcpServers": false

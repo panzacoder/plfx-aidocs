@@ -12,16 +12,18 @@
   "license": "ISC",
   "dependencies": {
     "@auth/core": "^0.37.4",
-    "@convex-dev/agent": "^0.0.14",
-    "@convex-dev/auth": "^0.0.82",
+    "@convex-dev/agent": "^0.3.2",
+    "@convex-dev/auth": "^0.0.90",
     "@polar-sh/sdk": "^0.25.0",
-    "@t3-oss/env-core": "^0.12.0",
+    "@t3-oss/env-core": "^0.13.10",
     "@v1/email": "workspace:*",
-    "convex": "^1.23.0",
-    "convex-helpers": "^0.1.80",
-    "openai": "^4.61.1",
+    "convex": "^1.31.5",
+    "ai": "^5.0.29",
+    "convex-helpers": "^0.1.111",
+    "zodvex": "github:panzacoder/zodvex#70d84a5a844c5696e38ca93c7193aa9682667cd1",
+    "openai": "^6.16.0",
     "standardwebhooks": "^1.0.0",
-    "zod": "^3.23.8"
+    "zod": "^4.1.8"
   },
   "devDependencies": {
     "@v1/typescript": "workspace:*"

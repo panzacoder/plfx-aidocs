@@ -11,6 +11,7 @@ export const files = {
   size: z.number(),
   type: z.string(), // MIME type
   status: z.enum(["uploading", "processing", "ready", "failed"]),
+  storageId: zid("_storage").optional(), // Convex storage ID
   metadata: z.record(z.string(), z.string()).optional(),
   lastUpdated: z.number(),
 };

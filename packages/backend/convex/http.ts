@@ -210,4 +210,55 @@ http.route({
   }),
 });
 
+// Simple CORS proxy for file uploads
+http.route({
+  path: "/upload-proxy",
+  method: "OPTIONS",
+  handler: httpAction(async (ctx, request) => {
+    return new Response(null, {
+      status: 200,
+      headers: new Headers({
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "PUT, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "86400",
+      }),
+    });
+  }),
+});
+
+http.route({
+  path: "/upload-proxy",
+  method: "PUT",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      // Get the file data and store it
+      const blob = await request.blob();
+      const storageId = await ctx.storage.store(blob);
+      
+      return new Response(
+        JSON.stringify({ storageId }),
+        {
+          status: 200,
+          headers: new Headers({
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          }),
+        }
+      );
+    } catch (error) {
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        {
+          status: 500,
+          headers: new Headers({
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          }),
+        }
+      );
+    }
+  }),
+});
+
 export default http;

@@ -39,8 +39,11 @@ export const uploadFileToOpenAI = internalAction({
       }
 
       // Get the file from storage
-      const storageId = `${file._id}-${file.name}`;
-      const fileContent = await ctx.storage.get(storageId);
+      if (!file.storageId) {
+        throw new Error("File has no storage ID");
+      }
+      
+      const fileContent = await ctx.storage.get(file.storageId);
       
       if (!fileContent) {
         throw new Error("File content not found in storage");
