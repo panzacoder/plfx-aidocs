@@ -14,10 +14,11 @@ const I18nMiddleware = createI18nMiddleware({
 
 const isSignInPage = createRouteMatcher(["/login"]);
 const isSignOut = createRouteMatcher(["/logout"]);
+const isPublicChat = createRouteMatcher(["/chat/:id"]);
 
 export default convexAuthNextjsMiddleware(async (request) => {
   const isAuthenticated = await isAuthenticatedNextjs();
-  if (!isSignOut(request)) {
+  if (!isSignOut(request) && !isPublicChat(request)) {
     if (isSignInPage(request) && isAuthenticated) {
       return nextjsMiddlewareRedirect(request, "/");
     }
