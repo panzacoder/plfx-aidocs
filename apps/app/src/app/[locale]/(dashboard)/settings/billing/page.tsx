@@ -93,7 +93,6 @@ export default function BillingSettings() {
                     {plan._id !== freePlan?._id && (
                       <span className="flex items-center rounded-md bg-primary/10 px-1.5 text-sm font-medium text-primary/80">
                         {currency === CURRENCIES.USD ? "$" : "€"}{" "}
-                        {/* TODO: remove assertions */}
                         {selectedPlanInterval === "month"
                           ? (plan.prices.month?.[currency]?.amount ?? 0) / 100
                           : (plan.prices.year?.[currency]?.amount ?? 0) /
